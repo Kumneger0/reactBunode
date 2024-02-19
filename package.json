@@ -1,0 +1,18 @@
+{
+  "name": "rscinbun",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/react": "^18.2.56",
+    "@types/react-dom": "^18.2.19",
+    "react": "canary",
+    "react-dom": "canary",
+    "react-server-dom-webpack": "canary"
+  }
+}
