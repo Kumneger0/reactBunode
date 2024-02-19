@@ -10,14 +10,6 @@ async function build() {
     target: "bun",
     format: "esm",
     outdir: "./build",
-    plugins: [
-      {
-        name: "skip client componet",
-        setup(build) {
-          build.onResolve({ filter: /\.jsx$/ }, async ({ path }) => {});
-        },
-      },
-    ],
   });
 
   await Bun.build({
@@ -67,8 +59,8 @@ const server = Bun.serve({
       console.log("request is comming");
       const module = await import("./build/page.js");
       const component = createElement(module.default);
-      // const page = renderToReadableStream(component);
-      const page = renderToString(component);
+      const page = renderToReadableStream(component);
+      // const page = renderToString(component);
       console.log(page);
       return new Response(page);
     }

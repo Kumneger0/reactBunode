@@ -4,6 +4,11 @@ import { createFromFetch } from "react-server-dom-webpack/client";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
-createFromFetch(fetch("/rsc")).then((comp) => {
-  root.render(comp);
-});
+try {
+  createFromFetch(fetch("/rsc")).then((comp) => {
+    console.log(comp);
+    root.render(comp);
+  });
+} catch (err) {
+  console.error(err);
+}
