@@ -10,6 +10,14 @@ async function build() {
     target: "bun",
     format: "esm",
     outdir: "./build",
+    plugins: [
+      {
+        name: "skip client componet",
+        setup(build) {
+          build.onResolve({ filter: /\.jsx$/ }, async ({ path }) => {});
+        },
+      },
+    ],
   });
 
   await Bun.build({
