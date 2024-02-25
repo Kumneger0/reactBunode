@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-
+import { join } from "path";
 declare module "react" {
   export const use: <T extends Promise<unknown>>(arg: T) => T;
 }
@@ -69,19 +69,36 @@ app.get("/", async (c) => {
   });
 });
 
-app.get("/rsc", async (c) => {
-  const { default: App } = (await import(
-    "./build/page.js"
-  )) as unknown as Module;
+app.get("/*", async (c) => {
+  const url = new URL(c.req.url);
+  const page = join(process.cwd(), "build", url.pathname, "page.js");
 
-  const { default: Loading } = (await import(
-    "./build/loading.js"
-  )) as unknown as Module;
-  const element = await rscDomWebpack.renderToReadableStream(
-    <Suspense fallback={<Loading />}>
+  const { default: Layout } = (await import("./build/layout.js")) as Module<{
+    children: React.ReactNode;
+  }>;
+
+  const { default: App } = (await import(page)) as Module;
+
+  const stream = rscDomWebpack.renderToReadableStream(
+    <Layout>
       <App />
-    </Suspense>
+    </Layout>
   );
+
+  const html = rscDomWebpackClient.createFromReadableStream(stream);
+
+  const secondStream = await renderToReadableStream(
+    createElement(() => {
+      return use(html);
+    })
+  );
+
+  return honoStream(c, async (streamApi) => {
+    streamApi.onAbort(() => {
+      console.log("aborted");
+    });
+    await streamApi.pipe(secondStream);
+  });
 });
 
 export default {

@@ -1,4 +1,4 @@
-import { type BuildConfig } from "bun";
+import { file, type BuildConfig } from "bun";
 import fs from "node:fs/promises";
 import { resolve, join } from "path";
 
@@ -24,53 +24,8 @@ function getBuildPath() {
 
 async function handleBuild() {
   buildRoutes();
-  return;
-  const files = await fs.readdir(getAppPath("app"));
-
-  console.log(files);
-
-  files.forEach(async (file) => {
-    const filePath = resolve(dir, file);
-    const stat = await fs.stat(filePath);
-    if (stat.isFile()) {
-      const initilaBuildResult = await build({
-        entrypoints: [filePath],
-        minify: true,
-        outdir: buildDir,
-      });
-      console.log(
-        initilaBuildResult?.success
-          ? `compiled ${filePath}`
-          : "filaed for some resone"
-      );
-    }
-
-    const { signal, abort } = new AbortController();
-
-    try {
-      const watcher = fs.watch(filePath, { signal });
-      for await (const { eventType } of watcher) {
-        if (eventType == "change") {
-          console.log("---------------------------------------");
-          console.log(`compiling ${filePath}`);
-
-          await build({
-            entrypoints: [filePath],
-            minify: true,
-            outdir: buildDir,
-          });
-          console.log("done");
-          console.log("-----------------------------------------");
-        }
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return;
-      throw err;
-    }
-  });
 }
 
-const entrypointsMap = new Map();
 async function buildRoutes(baseDir = "app") {
   const path = getAppPath(baseDir);
   const files = await fs.readdir(path);
@@ -88,12 +43,33 @@ async function buildRoutes(baseDir = "app") {
               const arrofPath = baseDir.split("/").slice(1);
               return join(...arrofPath);
             })();
+      watchFileChanges(eachfileAbsolutePath, destinationDir);
       build({
         entrypoints: [eachfileAbsolutePath],
         outdir: resolve(process.cwd(), "build", destinationDir),
       });
     }
   });
+}
+
+async function watchFileChanges(filePath: string, destinationDir: string) {
+  const { signal, abort } = new AbortController();
+
+  const watcher = fs.watch(filePath, { signal });
+  for await (const { eventType } of watcher) {
+    if (eventType == "change") {
+      console.log("---------------------------------------");
+      console.log(`compiling ${filePath}`);
+
+      await build({
+        entrypoints: [filePath],
+        minify: true,
+        outdir: destinationDir,
+      });
+      console.log("done");
+      console.log("-----------------------------------------");
+    }
+  }
 }
 
 export { handleBuild };
