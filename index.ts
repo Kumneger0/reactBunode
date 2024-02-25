@@ -1,42 +1,25 @@
+import { Hono } from "hono";
+import { serveStatic } from "hono/bun";
 import { createElement } from "react";
-import { renderToReadableStream, renderToString } from "react-dom/server";
+import { build } from "./scripts/build.js";
 
-const clientComponet = new Set();
+import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
 
-async function build() {
-  const result = await Bun.build({
-    entrypoints: ["./app/page.tsx"],
-    minify: true,
-    target: "bun",
-    format: "esm",
-    outdir: "./build",
-  });
+const app = new Hono();
 
-  await Bun.build({
-    entrypoints: ["./app/client.tsx"],
-    minify: true,
-    target: "browser",
-    outdir: "./build",
-    format: "esm",
-  });
-}
-// @ts-ignore
-const server = Bun.serve({
-  port: 3000,
-  async fetch(req) {
-    await build();
-    const url = new URL(req.url);
+app.use(
+  "/build/*",
+  serveStatic({
+    root: "./",
+    rewriteRequestPath: (path) => path.replace(/^\/build/, "/build"),
+  })
+);
 
-    if (url.pathname == "/build/client.js") {
-      const script = Bun.file("." + url.pathname);
-      return new Response(script);
-    }
-    if (url.pathname === "/") {
-      return new Response(
-        `
-          <!DOCTYPE html>
+app.get("/", (c) =>
+  c.html(`
+       <!DOCTYPE html>
           <html>
-             <body> 
+             <body>
                <div id = "root"></div>
                <script>
                window.__webpack_require__ = async (id) => {
@@ -46,25 +29,25 @@ const server = Bun.serve({
                <script type = "module" src = "/build/client.js"></script>
              </body>
 
-          </html> 
-          `,
-        {
-          headers: {
-            "Content-type": "text/html",
-          },
-        }
-      );
-    }
-    if (url.pathname === "/rsc") {
-      console.log("request is comming");
-      const module = await import("./build/page.js");
-      const component = createElement(module.default);
-      const page = renderToReadableStream(component);
-      // const page = renderToString(component);
-      console.log(page);
-      return new Response(page);
-    }
-  },
+          </html>
+`)
+);
+
+app.get("/rsc", async (c) => {
+  const module = await import("./build/page.js");
+
+  const element = rscDomWebpack.renderToReadableStream(
+    createElement(module.default)
+  );
+
+  console.log(element);
+
+  return new Response(element);
 });
 
-console.log(`server runnin on port ${server.port}`);
+console.log(`server runnin on port 3000`);
+
+export default {
+  port: 3000,
+  fetch: app.fetch,
+};

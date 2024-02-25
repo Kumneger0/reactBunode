@@ -5,14 +5,19 @@
   "devDependencies": {
     "@types/bun": "latest"
   },
+  "scripts": {
+    "start": "node index.js"
+  },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@hono/node-server": "^1.8.1",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
-    "react": "canary",
-    "react-dom": "canary",
-    "react-server-dom-webpack": "canary"
+    "hono": "^4.0.6",
+    "react": "18.3.0-next-3706edb81-20230308",
+    "react-dom": "18.3.0-next-3706edb81-20230308",
+    "react-server-dom-webpack": "0.0.0-experimental-41b4714f1-20230328"
   }
 }
