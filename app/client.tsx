@@ -1,16 +1,14 @@
 import ReactDOM, { hydrateRoot } from "react-dom/client";
-import { createFromFetch } from "react-server-dom-webpack/client";
+//@ts-expect-error
+import * as rscDomWebpackClient from "react-server-dom-webpack/client";
 const root = ReactDOM.createRoot(document.getElementById("root")!);
 
-createFromFetch(fetch("/rsc")).then((comp) => {
-  console.log(comp);
-  root.render(comp);
-});
+// console.log(rscDomWebpackClient);
 
-console.log("fff ");
-
-//TODO: fix Suspenc on server
-
-//TODO: stream server componet
+//@ts-ignore
+// rscDomWebpackClient.createFromFetch(fetch("/rsc")).then((comp) => {
+//   // console.log(comp);
+//   // root.render(comp);
+// });
 
 //TODO: make it greate

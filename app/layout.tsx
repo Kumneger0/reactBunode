@@ -1,7 +1,11 @@
 import React, { Suspense } from "react";
 
 function RootLayout({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={"loading todos"}>{children}</Suspense>;
+  return (
+    <html>
+      <body id="root">{children}</body>
+    </html>
+  );
 }
 
 export default RootLayout;

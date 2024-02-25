@@ -1,8 +1,9 @@
 import React, { Suspense } from "react";
 
 async function Page() {
+  await new Promise((res) => setTimeout(res, 3000));
   //@ts-ignore
-  return <Todos />;
+  return <div>hello world</div>;
 }
 
 export default Page;
@@ -18,7 +19,7 @@ async function Todos() {
           <div>{todo.title}</div>
           <input
             type="checkbox"
-            checked={todo.completed as unknown as boolean}
+            defaultChecked={todo.completed as unknown as boolean}
           />
         </div>
       ))}
