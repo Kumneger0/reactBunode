@@ -1,18 +1,19 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-import { createElement, Suspense, type FC } from "react";
+
+declare module "react" {
+  export const use: <T extends Promise<unknown>>(arg: T) => T;
+}
+
+import { Suspense, createElement, use, type FC } from "react";
 //@ts-ignore
 import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
 //@ts-ignore
 import * as rscDomWebpackClient from "react-server-dom-webpack/client";
 
-import {
-  renderToReadableStream,
-  renderToPipeableStream,
-  renderToString,
-} from "react-dom/server";
-import { handleBuild } from "./scripts/build.js";
 import { stream as honoStream } from "hono/streaming";
+import { renderToReadableStream } from "react-dom/server";
+import { handleBuild } from "./scripts/build.js";
 
 const app = new Hono();
 
@@ -43,7 +44,7 @@ app.get("/", async (c) => {
     "./build/loading.js"
   )) as unknown as Module;
 
-  const stream = await rscDomWebpack.renderToReadableStream(
+  const stream = rscDomWebpack.renderToReadableStream(
     <Layout>
       <Suspense fallback={<Loading />}>
         <App />
@@ -51,11 +52,12 @@ app.get("/", async (c) => {
     </Layout>
   );
 
-  const html = await rscDomWebpackClient.createFromReadableStream(stream);
+  //fake browser simulator
+  const html = rscDomWebpackClient.createFromReadableStream(stream);
 
   const secondStream = await renderToReadableStream(
     createElement(() => {
-      return html;
+      return use(html);
     })
   );
 
@@ -64,12 +66,6 @@ app.get("/", async (c) => {
       console.log("aborted");
     });
     await streamApi.pipe(secondStream);
-  });
-
-  return new Response(secondStream, {
-    headers: {
-      "Content-Type": "text/html",
-    },
   });
 });
 
