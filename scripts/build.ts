@@ -1,6 +1,6 @@
 import { type BuildConfig } from "bun";
 import fs from "node:fs/promises";
-import { resolve } from "path";
+import { resolve, join } from "path";
 
 async function build(config: BuildConfig) {
   try {
@@ -10,20 +10,22 @@ async function build(config: BuildConfig) {
     console.log(err);
   }
 }
-const dir = resolve(process.cwd(), "app");
+const dir = resolve(process.cwd());
 
-const buildDir = resolve(process.cwd(), "build");
+const buildDir = resolve(process.cwd());
 
-function getAppPath(...path: string[]) {
-  return resolve(dir, ...path);
+function getAppPath(baseDir: string) {
+  return resolve(dir, baseDir);
 }
 
-function getBuildPath(...pathToAppend: string[]) {
-  return resolve(buildDir, ...pathToAppend);
+function getBuildPath() {
+  return resolve(buildDir, "build");
 }
 
 async function handleBuild() {
-  const files = await fs.readdir(getAppPath());
+  buildRoutes();
+  return;
+  const files = await fs.readdir(getAppPath("app"));
 
   console.log(files);
 
@@ -68,57 +70,30 @@ async function handleBuild() {
   });
 }
 
-const buildPaths: string[] = [];
-
-async function buildRoutes(path: string = "", level = 0) {
-  path !== "" ? buildPaths.push(path) : [];
-
-  const currentAppPath = getAppPath(...buildPaths);
-  const fileOrDirNames = await fs.readdir(currentAppPath);
-
-  console.log(fileOrDirNames);
-
-  fileOrDirNames.forEach(async (fileOrDirName) => {
-    console.log(resolve(currentAppPath, fileOrDirName));
-    const stat = await fs.stat(resolve(currentAppPath, fileOrDirName));
-
-    console.log(stat);
-
+const entrypointsMap = new Map();
+async function buildRoutes(baseDir = "app") {
+  const path = getAppPath(baseDir);
+  const files = await fs.readdir(path);
+  files.forEach(async (file) => {
+    const eachfileAbsolutePath = resolve(path, file);
+    const stat = await fs.stat(eachfileAbsolutePath);
     if (stat.isDirectory()) {
-      buildRoutes(fileOrDirName, level + 1);
+      return buildRoutes(join(baseDir, file));
     }
     if (stat.isFile()) {
-      handleFileBuild(
-        resolve(currentAppPath, fileOrDirName),
-        getBuildPath(...buildPaths)
-      );
+      const destinationDir =
+        baseDir == "app"
+          ? ""
+          : (() => {
+              const arrofPath = baseDir.split("/").slice(1);
+              return join(...arrofPath);
+            })();
+      build({
+        entrypoints: [eachfileAbsolutePath],
+        outdir: resolve(process.cwd(), "build", destinationDir),
+      });
     }
   });
 }
-
-async function handleFileBuild(filePath: string, buildDir: string) {
-  const stat = await fs.stat(filePath);
-  if (stat.isFile()) {
-    const initilaBuildResult = await build({
-      entrypoints: [filePath],
-      minify: true,
-      outdir: buildDir,
-    });
-    console.log(
-      initilaBuildResult?.success
-        ? `done ${filePath}`
-        : "filaed for some resone"
-    );
-  }
-}
-
-const result = await build({
-  entrypoints: [resolve(process.cwd(), "app/about/page")],
-  outdir: resolve(process.cwd(), "build/about"),
-});
-
-console.log(result);
-
-function watchFileChanges() {}
 
 export { handleBuild };

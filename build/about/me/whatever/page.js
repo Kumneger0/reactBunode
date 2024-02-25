@@ -2872,14 +2872,14 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
   }
 });
 
-// app/loading.tsx
+// app/about/me/whatever/page.tsx
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
-var Loading = function() {
+var Page = function() {
   return jsx_dev_runtime.jsxDEV("div", {
-    children: "loading todos ....please wait"
+    children: "page"
   }, undefined, false, undefined, this);
 };
-var loading_default = Loading;
+var page_default = Page;
 export {
-  loading_default as default
+  page_default as default
 };
