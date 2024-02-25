@@ -7,7 +7,7 @@ createFromFetch(fetch("/rsc")).then((comp) => {
   root.render(comp);
 });
 
-console.log("fff");
+console.log("fff ");
 
 //TODO: fix Suspenc on server
 

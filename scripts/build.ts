@@ -39,7 +39,6 @@ files.forEach(async (file) => {
     }
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") return;
-    console.log(err);
     throw err;
   }
 });

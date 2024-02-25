@@ -1,9 +1,8 @@
 import React, { Suspense } from "react";
 
 async function Page() {
-  return (
-      <Todos />;
-  );
+  //@ts-ignore
+  return <Todos />;
 }
 
 export default Page;

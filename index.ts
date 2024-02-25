@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-import { createElement } from "react";
-import { build } from "./scripts/build.js";
+import { createElement, Suspense } from "react";
 
+//@ts-ignore
 import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
 
 const app = new Hono();
@@ -35,9 +35,13 @@ app.get("/", (c) =>
 
 app.get("/rsc", async (c) => {
   const module = await import("./build/page.js");
-
+  const loading = await import("./build/loading.js");
   const element = rscDomWebpack.renderToReadableStream(
-    createElement(module.default)
+    createElement(
+      Suspense,
+      { fallback: createElement(loading.default) },
+      createElement(module.default as unknown as React.FC)
+    )
   );
 
   console.log(element);
