@@ -20,7 +20,7 @@ type Module<T = {}> = {
 
 const clientEntryPoints = new Set<string>();
 
-const reactComponentRegex = /\.tsx$/;
+const reactComponentRegex = /\.(tsx|jsx)$/;
 
 const clientResolver: BunPlugin = {
   name: "resolve-client-imports",
@@ -29,27 +29,31 @@ const clientResolver: BunPlugin = {
 
     console.log("trying to opt out client compont");
 
-    build.onLoad({ filter: /\.(tsx|jsx)$/ }, async ({ path: relativePath }) => {
-      console.log("relativePaht", relativePath);
+    build.onResolve(
+      { filter: reactComponentRegex },
+      async ({ path: relativePath }) => {
+        console.log("relativePaht", relativePath);
 
-      const path = resolve(relativePath);
-      const contents = await readFile(path, "utf-8");
+        const path = resolve(relativePath);
+        const contents = await readFile(path, "utf-8");
 
-      console.log("has use client", contents.startsWith('"use client"'));
+        console.log("has use client", contents.startsWith('"use client"'));
 
-      if (contents.startsWith('"use client"')) {
-        console.log("now true");
-        clientEntryPoints.add(path);
-        return {
-          // Avoid bundling client components into the server build.
-          external: true,
-          // Resolve the client import to the built `.js` file
-          // created by the client `esbuild` process below.
-          path: relativePath.replace(reactComponentRegex, ".js"),
-        };
+        if (contents.startsWith('"use client"')) {
+          console.log("now true");
+          clientEntryPoints.add(path);
+          return {
+            contents,
+            // Avoid bundling client components into the server build.
+            external: true,
+            // Resolve the client import to the built `.js` file
+            // created by the client `esbuild` process below.
+            path: relativePath.replace(reactComponentRegex, ".js"),
+          };
+        }
+        console.log(clientEntryPoints);
       }
-      console.log(clientEntryPoints);
-    });
+    );
   },
 };
 
@@ -87,6 +91,7 @@ export async function routeHandler(req: HonoRequest) {
           outdir: ".rscInBun",
           plugins: [clientResolver],
         });
+        console.log(type, result);
         if (result?.success) {
           const output = {
             type,
@@ -96,6 +101,8 @@ export async function routeHandler(req: HonoRequest) {
         }
       })
     );
+
+    console.log("result", result);
 
     const output = await build({
       entrypoints: [...clientEntryPoints],
@@ -108,7 +115,7 @@ export async function routeHandler(req: HonoRequest) {
     output?.outputs.forEach(async (file) => {
       // Parse file export names
       const [, exports] = parse(await file.text());
-      let newContents = file.text;
+      let newContents = await file.text();
 
       for (const exp of exports) {
         // Create a unique lookup key for each exported component.
