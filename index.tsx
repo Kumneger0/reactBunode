@@ -1,11 +1,10 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-import { join } from "path";
 declare module "react" {
   export const use: <T extends Promise<unknown>>(arg: T) => T;
 }
 
-import { Suspense, createElement, use, type FC } from "react";
+import { Suspense, type FC } from "react";
 //@ts-ignore
 import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
 //@ts-ignore
@@ -13,15 +12,13 @@ import * as rscDomWebpackClient from "react-server-dom-webpack/client";
 
 import { stream as honoStream } from "hono/streaming";
 import { renderToReadableStream } from "react-dom/server";
-import { handleBuild } from "./scripts/build.js";
+import { routeHandler } from "./lib/routeHadler.js";
 
 const app = new Hono();
 
 type Module<T = {}> = {
   default: FC<T>;
 };
-
-handleBuild();
 
 app.use(
   "/build/*",
@@ -31,67 +28,32 @@ app.use(
   })
 );
 
-app.get("/", async (c) => {
-  const { default: Layout } = (await import("./build/layout.js")) as Module<{
-    children: React.ReactNode;
-  }>;
-
-  const { default: App } = (await import(
-    "./build/page.js"
-  )) as unknown as Module;
-
-  const { default: Loading } = (await import(
-    "./build/loading.js"
-  )) as unknown as Module;
+app.get("/*", async (c) => {
+  const url = new URL(c.req.url);
+  if (url.pathname == "/favicon.ico") return;
+  const { Layout, Page, searchParams, Loading, clientComponentMap } =
+    await routeHandler(c.req);
 
   const stream = rscDomWebpack.renderToReadableStream(
     <Layout>
-      <Suspense fallback={<Loading />}>
-        <App />
+      <Suspense fallback={Loading ? <Loading /> : null}>
+        <Page searchParams={searchParams} />
       </Suspense>
-    </Layout>
+    </Layout>,
+    clientComponentMap
   );
 
   //fake browser simulator
-  const html = rscDomWebpackClient.createFromReadableStream(stream);
+  const html = await rscDomWebpackClient.createFromReadableStream(stream);
 
-  const secondStream = await renderToReadableStream(
-    createElement(() => {
-      return use(html);
-    })
-  );
+  console.log(html);
 
-  return honoStream(c, async (streamApi) => {
-    streamApi.onAbort(() => {
-      console.log("aborted");
-    });
-    await streamApi.pipe(secondStream);
+  const secondStream = await renderToReadableStream(html, {
+    onError(error, errorInfo) {
+      console.log(error);
+      console.log(errorInfo);
+    },
   });
-});
-
-app.get("/*", async (c) => {
-  const url = new URL(c.req.url);
-  const page = join(process.cwd(), "build", url.pathname, "page.js");
-
-  const { default: Layout } = (await import("./build/layout.js")) as Module<{
-    children: React.ReactNode;
-  }>;
-
-  const { default: App } = (await import(page)) as Module;
-
-  const stream = rscDomWebpack.renderToReadableStream(
-    <Layout>
-      <App />
-    </Layout>
-  );
-
-  const html = rscDomWebpackClient.createFromReadableStream(stream);
-
-  const secondStream = await renderToReadableStream(
-    createElement(() => {
-      return use(html);
-    })
-  );
 
   return honoStream(c, async (streamApi) => {
     streamApi.onAbort(() => {

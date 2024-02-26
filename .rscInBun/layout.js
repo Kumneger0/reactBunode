@@ -2872,14 +2872,17 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
   }
 });
 
-// app/about/page.tsx
+// app/layout.tsx
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
-var About = function({ searchParams }) {
-  return jsx_dev_runtime.jsxDEV("div", {
-    children: searchParams.get("name")
+var RootLayout = function({ children }) {
+  return jsx_dev_runtime.jsxDEV("html", {
+    children: jsx_dev_runtime.jsxDEV("body", {
+      id: "root",
+      children
+    }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
-var page_default = About;
+var layout_default = RootLayout;
 export {
-  page_default as default
+  layout_default as default
 };

@@ -1,9 +1,15 @@
 import React, { Suspense } from "react";
+import Input from "./input";
 
 async function Page() {
   await new Promise((res) => setTimeout(res, 3000));
   //@ts-ignore
-  return <div>hello world</div>;
+  return (
+    <div>
+      <div>helle from serve page.tsx file</div>
+      <Input />
+    </div>
+  );
 }
 
 export default Page;

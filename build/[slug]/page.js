@@ -2872,14 +2872,14 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
   }
 });
 
-// app/about/page.tsx
+// app/[slug]/page.tsx
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
-var About = function({ searchParams }) {
+var Page = function({ slug }) {
   return jsx_dev_runtime.jsxDEV("div", {
-    children: searchParams.get("name")
+    children: slug
   }, undefined, false, undefined, this);
 };
-var page_default = About;
+var page_default = Page;
 export {
   page_default as default
 };
