@@ -1,7 +1,14 @@
 import React from "react";
 
 function Layout({ children }: { children: React.ReactNode }) {
-  return <div>{children}</div>;
+  return (
+    <html>
+      <body>
+        <div>hellow i am boj</div>
+        {children}
+      </body>
+    </html>
+  );
 }
 
 export default Layout;

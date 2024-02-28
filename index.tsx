@@ -4,22 +4,17 @@ declare module "react" {
   export const use: <T extends Promise<unknown>>(arg: T) => T;
 }
 
-import React, { Suspense, use, type FC, createElement, useState } from "react";
+import React, { Suspense, type FC } from "react";
 //@ts-ignore
 import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
 //@ts-ignore
 import * as rscDomWebpackClient from "react-server-dom-webpack/client";
 
-import { stream as honoStream } from "hono/streaming";
 import { renderToReadableStream } from "react-dom/server";
-import { routeHandler } from "./lib/routeHadler.js";
 import { injectRSCPayload } from "rsc-html-stream/server";
+import { routeHandler } from "./lib/routeHadler.js";
 
 const app = new Hono();
-
-type Module<T = {}> = {
-  default: FC<T>;
-};
 
 app.use(
   "/build/*",
@@ -61,34 +56,6 @@ app.get("/*", async (c) => {
   console.log(response);
 
   return new Response(response);
-
-  //fake browser simulator
-  const html = rscDomWebpackClient.createFromReadableStream(stream);
-
-  const secondStream = await renderToReadableStream(
-    createElement(() => {
-      const [state, setState] = useState<any>();
-      return (
-        <div>
-          {use(html)}
-          <button onClick={() => setState(Math.random())}>{state}</button>
-        </div>
-      );
-    }),
-    {
-      onError(error, errorInfo) {
-        error;
-        errorInfo;
-      },
-    }
-  );
-
-  return honoStream(c, async (streamApi) => {
-    streamApi.onAbort(() => {
-      ("aborted");
-    });
-    await streamApi.pipe(secondStream);
-  });
 });
 
 export default {
@@ -96,13 +63,9 @@ export default {
   fetch: app.fetch,
 };
 
-// Render a component to RSC payload using bundler integration package.
-
-// Fork the stream, and render it to HTML.
-
 const result = await Bun.build({
-  entrypoints: ["./build/clientEntry.js"],
+  entrypoints: ["./src/clientEntry.ts"],
+  minify: true,
   outdir: "./build",
+  target: "browser",
 });
-
-console.log(result);

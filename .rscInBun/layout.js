@@ -2875,8 +2875,15 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
 // app/layout.tsx
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
 var Layout = function({ children }) {
-  return jsx_dev_runtime.jsxDEV("div", {
-    children
+  return jsx_dev_runtime.jsxDEV("html", {
+    children: jsx_dev_runtime.jsxDEV("body", {
+      children: [
+        jsx_dev_runtime.jsxDEV("div", {
+          children: "hellow i am boj"
+        }, undefined, false, undefined, this),
+        children
+      ]
+    }, undefined, true, undefined, this)
   }, undefined, false, undefined, this);
 };
 var layout_default = Layout;
