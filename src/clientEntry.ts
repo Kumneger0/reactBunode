@@ -8,7 +8,8 @@ let data;
 function Content() {
   data ??= ReactServerDOMReader.createFromReadableStream(rscStream);
   data.then((html: any) => {
-    hydrateRoot(document.body, html);
+    // hydrateRoot(document.body, html);
+    console.log("hydrated  hh");
   });
 }
 

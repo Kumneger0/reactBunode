@@ -1162,7 +1162,7 @@ var require_react_development = __commonJS((exports, module) => {
       function disableLogs() {
         {
           if (disabledDepth === 0) {
-            prevLog = ;
+            prevLog = console.log;
             prevInfo = console.info;
             prevWarn = console.warn;
             prevError = console.error;
@@ -2155,7 +2155,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
       function disableLogs() {
         {
           if (disabledDepth === 0) {
-            prevLog = ;
+            prevLog = console.log;
             prevInfo = console.info;
             prevWarn = console.warn;
             prevError = console.error;
@@ -2876,18 +2876,16 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
 var import_react = __toESM(require_react(), 1);
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
 var Input = function() {
-  const [name, setName] = import_react.useState();
-  return jsx_dev_runtime.jsxDEV("input", {
-    value: name,
-    onChange: (e) => setName(e.currentTarget.value)
+  const [state, setState] = import_react.useState(0);
+  return jsx_dev_runtime.jsxDEV("button", {
+    children: state
   }, undefined, false, undefined, this);
 };
 "use client";
-var input_default = Input;
 export {
-  input_default as default
+  Input
 };
 
-input_default.$$id = "/home/kumneger/projects/personalProjects/RSCInBun/build/input.jsdefault";
-input_default.$$typeof = Symbol.for("react.client.reference");
+        Input.$$id = "/home/kumneger/projects/personalProjects/RSCInBun/build/input.jsInput";
+        Input.$$typeof = Symbol.for("react.client.reference");
 			

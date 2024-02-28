@@ -53,8 +53,6 @@ app.get("/*", async (c) => {
   // Inject the RSC stream into the HTML stream.
   let response = htmlStream.pipeThrough(injectRSCPayload(s2));
 
-  console.log(response);
-
   return new Response(response);
 });
 

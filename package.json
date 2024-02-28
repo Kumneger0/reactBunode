@@ -6,7 +6,7 @@
     "@types/bun": "latest"
   },
   "scripts": {
-    "start": "node index.js"
+    "dev": "bun --watch index.tsx"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -16,7 +16,7 @@
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "es-module-lexer": "^1.4.1",
-    "esbuild": "0.17.14",
+    "esbuild": "latest",
     "hono": "^4.0.6",
     "react": "18.3.0-next-3706edb81-20230308",
     "react-dom": "18.3.0-next-3706edb81-20230308",

@@ -1,12 +1,32 @@
-import { join } from "path";
-import type { HonoRequest } from "hono";
-import React, { type ReactNode, type FC } from "react";
-import { build } from "./_buildCurrentRoute";
-import { type BunPlugin } from "bun";
-import { readFile, writeFile } from "fs/promises";
-import { resolve } from "path";
 import { parse } from "es-module-lexer";
+import { writeFile } from "fs/promises";
+import type { HonoRequest } from "hono";
 import { relative } from "node:path";
+import { join, resolve } from "path";
+import React, { type FC } from "react";
+import packageJson from "../package.json";
+import { clientResolver } from "../plugins/client-component-resolver";
+import { build } from "./_buildCurrentRoute";
+
+export const clientEntryPoints = new Set<string>();
+
+function getExternalsFromPackageJson(): string[] {
+  const sections: (keyof typeof packageJson)[] = [
+    "dependencies",
+    "devDependencies",
+    "peerDependencies",
+  ];
+  const externals: string[] = [];
+
+  for (const section of sections) {
+    if (packageJson[section]) {
+      externals.push(...Object.keys(packageJson[section]));
+    }
+  }
+
+  // Removing potential duplicates between dev and peer
+  return Array.from(new Set(externals));
+}
 
 interface BasePageProps {
   searchParams?: URL["searchParams"];
@@ -17,64 +37,11 @@ type Module<T = {}> = {
   default: FC<T & BasePageProps>;
 };
 
-const clientEntryPoints = new Set<string>();
-
-const reactComponentRegex = /\.(tsx|jsx)$/;
-
-const clientResolver: BunPlugin = {
-  name: "resolve-client-imports",
-  target: "bun",
-
-  setup(build) {
-    build.onLoad(
-      { filter: reactComponentRegex, namespace: "file" },
-      async (arg) => {
-        console.log("onload", arg.path);
-        const contents = await readFile(arg.path, "utf-8");
-        console.log(contents.startsWith('"use client"'));
-        if (contents.startsWith('"use client"')) {
-          console.log("load working");
-          build.config.external?.push(arg.path);
-          return {
-            contents: contents,
-            loader: "tsx",
-          };
-        }
-        return {
-          contents,
-        };
-      }
-    );
-
-    build.onResolve(
-      { filter: reactComponentRegex },
-      async ({ path: relativePath }) => {
-        console.log("on resolve is excuted", relativePath);
-
-        const path = resolve(relativePath);
-        const contents = await readFile(path, "utf-8");
-
-        if (contents.startsWith('"use client"')) {
-          clientEntryPoints.add(path);
-
-          return {
-            external: true,
-
-            path: relativePath.replace(reactComponentRegex, ".js"),
-          };
-        }
-      }
-    );
-  },
-};
-
 export async function routeHandler(req: HonoRequest) {
   const url = new URL(req.url);
 
   const searchParams = url.searchParams;
   const currentPath = join(process.cwd(), "app", url.pathname);
-
-  currentPath;
 
   const pagePath = join(currentPath, "page.tsx");
   const loadingFilePath = join(currentPath, "loading.tsx");
@@ -100,36 +67,36 @@ export async function routeHandler(req: HonoRequest) {
       ].map(async ({ path, type }) => {
         try {
           const result = await build({
-            entrypoints: [path],
-            outdir: join(process.cwd(), ".rscInBun"),
-            plugins: [clientResolver],
+            entryPoints: [path],
+            outdir: join(process.cwd(), "build"),
+            // plugins: [clientResolver],
+            // external: [...getExternalsFromPackageJson()],
+            bundle: true,
+            format: "esm",
           });
-
-          console.log(result);
 
           const output = {
             type,
-            path: join(process.cwd(), ".rscInBun", `${type}.js`),
+            path: join(process.cwd(), "build", `${type}.js`),
           };
           return output;
         } catch (err) {
-          err;
+          console.error(err);
         }
       })
     );
 
     const output = await build({
-      entrypoints: [...clientEntryPoints],
+      entryPoints: [...clientEntryPoints],
       format: "esm",
       outdir: resolve(process.cwd(), "build"),
     });
 
     const clientComponentMap: Record<any, any> = {};
 
-    output?.outputs?.forEach(async (file) => {
-      // Parse file export names
-      const [, exports] = parse(await file.text());
-      let newContents = await file.text();
+    output?.outputFiles?.forEach(async (file) => {
+      const [, exports] = parse(file.text);
+      let newContents = file.text;
 
       for (const exp of exports) {
         const key = file.path + exp.n;
@@ -142,8 +109,8 @@ export async function routeHandler(req: HonoRequest) {
         };
 
         newContents += `
-${exp.ln}.$$id = ${JSON.stringify(key)};
-${exp.ln}.$$typeof = Symbol.for("react.client.reference");
+        ${exp.ln}.$$id = ${JSON.stringify(key)};
+        ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
 			`;
       }
       await writeFile(file.path, newContents);
