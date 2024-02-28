@@ -2876,7 +2876,7 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
 var Loading = function() {
   return jsx_dev_runtime.jsxDEV("div", {
-    children: "loading todos ....please wait"
+    children: "loading"
   }, undefined, false, undefined, this);
 };
 var loading_default = Loading;

@@ -1,4 +1,3 @@
-import fs from "node:fs/promises";
 import { join } from "path";
 import type { HonoRequest } from "hono";
 import React, { type ReactNode, type FC } from "react";
@@ -24,34 +23,46 @@ const reactComponentRegex = /\.(tsx|jsx)$/;
 
 const clientResolver: BunPlugin = {
   name: "resolve-client-imports",
-  setup(build) {
-    // Intercept component imports to check for 'use client'
+  target: "bun",
 
-    console.log("trying to opt out client compont");
+  setup(build) {
+    build.onLoad(
+      { filter: reactComponentRegex, namespace: "file" },
+      async (arg) => {
+        console.log("onload", arg.path);
+        const contents = await readFile(arg.path, "utf-8");
+        console.log(contents.startsWith('"use client"'));
+        if (contents.startsWith('"use client"')) {
+          console.log("load working");
+          build.config.external?.push(arg.path);
+          return {
+            contents: contents,
+            loader: "tsx",
+          };
+        }
+        return {
+          contents,
+        };
+      }
+    );
 
     build.onResolve(
       { filter: reactComponentRegex },
       async ({ path: relativePath }) => {
-        console.log("relativePaht", relativePath);
+        console.log("on resolve is excuted", relativePath);
 
         const path = resolve(relativePath);
         const contents = await readFile(path, "utf-8");
 
-        console.log("has use client", contents.startsWith('"use client"'));
-
         if (contents.startsWith('"use client"')) {
-          console.log("now true");
           clientEntryPoints.add(path);
+
           return {
-            contents,
-            // Avoid bundling client components into the server build.
             external: true,
-            // Resolve the client import to the built `.js` file
-            // created by the client `esbuild` process below.
+
             path: relativePath.replace(reactComponentRegex, ".js"),
           };
         }
-        console.log(clientEntryPoints);
       }
     );
   },
@@ -63,6 +74,8 @@ export async function routeHandler(req: HonoRequest) {
   const searchParams = url.searchParams;
   const currentPath = join(process.cwd(), "app", url.pathname);
 
+  currentPath;
+
   const pagePath = join(currentPath, "page.tsx");
   const loadingFilePath = join(currentPath, "loading.tsx");
   const rootLayoutPath = join(process.cwd(), "app", "layout.tsx");
@@ -71,7 +84,6 @@ export async function routeHandler(req: HonoRequest) {
   const isrootLayoutExists = await Bun.file(rootLayoutPath).exists();
 
   if (!isPageExists) {
-    console.log("current path", currentPath);
     throw new Error("we can't find page.tsx or page.jsx file in current route");
   }
 
@@ -86,23 +98,25 @@ export async function routeHandler(req: HonoRequest) {
         { path: rootLayoutPath, type: "layout" as const },
         { path: loadingFilePath, type: "loading" as const },
       ].map(async ({ path, type }) => {
-        const result = await build({
-          entrypoints: [path],
-          outdir: ".rscInBun",
-          plugins: [clientResolver],
-        });
-        console.log(type, result);
-        if (result?.success) {
+        try {
+          const result = await build({
+            entrypoints: [path],
+            outdir: join(process.cwd(), ".rscInBun"),
+            plugins: [clientResolver],
+          });
+
+          console.log(result);
+
           const output = {
             type,
-            path: result.outputs[0].path,
+            path: join(process.cwd(), ".rscInBun", `${type}.js`),
           };
           return output;
+        } catch (err) {
+          err;
         }
       })
     );
-
-    console.log("result", result);
 
     const output = await build({
       entrypoints: [...clientEntryPoints],
@@ -112,35 +126,21 @@ export async function routeHandler(req: HonoRequest) {
 
     const clientComponentMap: Record<any, any> = {};
 
-    output?.outputs.forEach(async (file) => {
+    output?.outputs?.forEach(async (file) => {
       // Parse file export names
       const [, exports] = parse(await file.text());
       let newContents = await file.text();
 
       for (const exp of exports) {
-        // Create a unique lookup key for each exported component.
-        // Could be any identifier!
-        // We'll choose the file path + export name for simplicity.
         const key = file.path + exp.n;
         clientComponentMap[key] = {
-          // Have the browser import your component from your server
-          // at `/build/[component].js`
           id: `/${relative(process.cwd(), file.path)}`,
-          // Use the detected export name
+
           name: exp.n,
-          // Turn off chunks. This is webpack-specific
           chunks: [],
-          // Use an async import for the built resource in the browser
           async: true,
         };
 
-        console.log(clientComponentMap);
-
-        // Tag each component export with a special `react.client.reference` type
-        // and the map key to look up import information.
-        // This tells your stream renderer to avoid rendering the
-        // client component server-side. Instead, import the built component
-        // client-side at `clientComponentMap[key].id`
         newContents += `
 ${exp.ln}.$$id = ${JSON.stringify(key)};
 ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
@@ -151,11 +151,8 @@ ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
 
     const componetsAfterBuild = await Promise.all(
       result.map(async (page) => {
-        if (!page) {
-          const page = (await import("../.rscInBun/page")) as unknown as Module;
-          return { default: page.default, type: "page" };
-        }
-        const componet = (await import(page.path)) as Module;
+        if (!page) return;
+        const componet = (await import(page?.path)) as Module;
         return { default: componet.default, type: page.type };
       })
     );

@@ -1162,7 +1162,7 @@ var require_react_development = __commonJS((exports, module) => {
       function disableLogs() {
         {
           if (disabledDepth === 0) {
-            prevLog = console.log;
+            prevLog = ;
             prevInfo = console.info;
             prevWarn = console.warn;
             prevError = console.error;
@@ -2155,7 +2155,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
       function disableLogs() {
         {
           if (disabledDepth === 0) {
-            prevLog = console.log;
+            prevLog = ;
             prevInfo = console.info;
             prevWarn = console.warn;
             prevError = console.error;

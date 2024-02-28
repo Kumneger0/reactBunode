@@ -2874,15 +2874,12 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
 
 // app/layout.tsx
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
-var RootLayout = function({ children }) {
-  return jsx_dev_runtime.jsxDEV("html", {
-    children: jsx_dev_runtime.jsxDEV("body", {
-      id: "root",
-      children
-    }, undefined, false, undefined, this)
+var Layout = function({ children }) {
+  return jsx_dev_runtime.jsxDEV("div", {
+    children
   }, undefined, false, undefined, this);
 };
-var layout_default = RootLayout;
+var layout_default = Layout;
 export {
   layout_default as default
 };

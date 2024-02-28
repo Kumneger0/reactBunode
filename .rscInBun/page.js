@@ -2873,31 +2873,26 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
 });
 
 // app/input.tsx
-var import_react = __toESM(require_react(), 1);
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
 var Input = function() {
-  const [name, setName] = import_react.useState();
-  return jsx_dev_runtime.jsxDEV("input", {
-    value: name,
-    onChange: (e) => setName(e.currentTarget.value)
+  return jsx_dev_runtime.jsxDEV("button", {
+    children: " click me"
   }, undefined, false, undefined, this);
 };
 "use client";
 var input_default = Input;
 
 // app/page.tsx
+var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
 async function Page() {
   await new Promise((res) => setTimeout(res, 3000));
   return jsx_dev_runtime2.jsxDEV("div", {
     children: [
-      jsx_dev_runtime2.jsxDEV("div", {
-        children: "helle from serve page.tsx file"
-      }, undefined, false, undefined, this),
+      "home page",
       jsx_dev_runtime2.jsxDEV(input_default, {}, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
 }
-var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
 var page_default = Page;
 export {
   page_default as default

@@ -1,11 +1,7 @@
-import React, { Suspense } from "react";
+import React from "react";
 
-function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html>
-      <body id="root">{children}</body>
-    </html>
-  );
+function Layout({ children }: { children: React.ReactNode }) {
+  return <div>{children}</div>;
 }
 
-export default RootLayout;
+export default Layout;
