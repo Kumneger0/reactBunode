@@ -4,9 +4,9 @@ declare module "react" {
   export const use: <T extends Promise<unknown>>(arg: T) => T;
 }
 
-import React, { Suspense, type FC } from "react";
+import React, { Suspense } from "react";
 //@ts-ignore
-import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
+import * as rscDomWebpack from "react-server-dom-webpack/server.edge";
 //@ts-ignore
 import * as rscDomWebpackClient from "react-server-dom-webpack/client";
 
@@ -30,7 +30,7 @@ app.get("/*", async (c) => {
   const { Layout, Page, searchParams, Loading, clientComponentMap } =
     await routeHandler(c.req);
 
-  const stream = rscDomWebpack.renderToReadableStream(
+  const stream = await rscDomWebpack.renderToReadableStream(
     <Layout>
       <Suspense fallback={Loading ? <Loading /> : "load"}>
         <Page searchParams={searchParams} />
@@ -40,6 +40,9 @@ app.get("/*", async (c) => {
   );
 
   let [s1, s2] = stream.tee();
+
+  console.log("here", s1);
+
   let data;
   function Content() {
     data ??= rscDomWebpackClient.createFromReadableStream(s1);
@@ -50,8 +53,9 @@ app.get("/*", async (c) => {
     bootstrapModules: ["/build/clientEntry.js"],
   });
 
-  // Inject the RSC stream into the HTML stream.
   let response = htmlStream.pipeThrough(injectRSCPayload(s2));
+
+  console.log("responce", response);
 
   return new Response(response);
 });

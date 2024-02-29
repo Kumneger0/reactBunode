@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.8.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "es-module-lexer": "^1.4.1",
@@ -21,6 +24,7 @@
     "react": "18.3.0-next-3706edb81-20230308",
     "react-dom": "18.3.0-next-3706edb81-20230308",
     "react-server-dom-webpack": "0.0.0-experimental-41b4714f1-20230328",
-    "rsc-html-stream": "0.0.3"
+    "rsc-html-stream": "0.0.3",
+    "tslib": "^2.6.2"
   }
 }

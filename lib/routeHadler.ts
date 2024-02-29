@@ -1,13 +1,18 @@
 import { parse } from "es-module-lexer";
-import { writeFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import type { HonoRequest } from "hono";
 import { relative } from "node:path";
-import { join, resolve } from "path";
+import { resolve as nodeResolve } from "path";
 import React, { type FC } from "react";
 import packageJson from "../package.json";
 import { clientResolver } from "../plugins/client-component-resolver";
 import { build } from "./_buildCurrentRoute";
+import typescript from "@rollup/plugin-typescript";
+import resolve from "@rollup/plugin-node-resolve";
 
+import { rollup } from "rollup";
+import { join } from "path";
+import terser from "@rollup/plugin-terser";
 export const clientEntryPoints = new Set<string>();
 
 function getExternalsFromPackageJson(): string[] {
@@ -58,20 +63,22 @@ export async function routeHandler(req: HonoRequest) {
     throw new Error("please define root layout in app dir");
   }
 
+  const clientComponentMap: Record<any, any> = {};
+
+  const componets = [
+    { path: pagePath, type: "page" as const },
+    { path: rootLayoutPath, type: "layout" as const },
+    { path: loadingFilePath, type: "loading" as const },
+  ];
+
   try {
     const result = await Promise.all(
-      [
-        { path: pagePath, type: "page" as const },
-        { path: rootLayoutPath, type: "layout" as const },
-        { path: loadingFilePath, type: "loading" as const },
-      ].map(async ({ path, type }) => {
+      componets.map(async ({ path, type }) => {
         try {
           const result = await build({
-            entryPoints: [path],
+            entrypoints: [path],
             outdir: join(process.cwd(), "build"),
-            // plugins: [clientResolver],
-            // external: [...getExternalsFromPackageJson()],
-            bundle: true,
+            plugins: [clientResolver],
             format: "esm",
           });
 
@@ -86,17 +93,17 @@ export async function routeHandler(req: HonoRequest) {
       })
     );
 
-    const output = await build({
-      entryPoints: [...clientEntryPoints],
+    const bunResult = await build({
+      entrypoints: [...clientEntryPoints],
       format: "esm",
-      outdir: resolve(process.cwd(), "build"),
+      outdir: nodeResolve(process.cwd(), "build"),
     });
 
-    const clientComponentMap: Record<any, any> = {};
+    console.log("bun result", bunResult);
 
-    output?.outputFiles?.forEach(async (file) => {
-      const [, exports] = parse(file.text);
-      let newContents = file.text;
+    bunResult?.outputs?.forEach(async (file) => {
+      const [, exports] = parse(await file.text());
+      let newContents = await file.text();
 
       for (const exp of exports) {
         const key = file.path + exp.n;
@@ -116,10 +123,14 @@ export async function routeHandler(req: HonoRequest) {
       await writeFile(file.path, newContents);
     });
 
+    console.log("result", result);
+
     const componetsAfterBuild = await Promise.all(
       result.map(async (page) => {
         if (!page) return;
-        const componet = (await import(page?.path)) as Module;
+        const componet = (await import(
+          join(process.cwd(), "build", `${page.type}.js`)
+        )) as Module;
         return { default: componet.default, type: page.type };
       })
     );
