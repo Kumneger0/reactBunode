@@ -76,10 +76,11 @@ export async function routeHandler(req: HonoRequest) {
       componets.map(async ({ path, type }) => {
         try {
           const result = await build({
-            entrypoints: [path],
+            entryPoints: [path],
             outdir: join(process.cwd(), "build"),
             plugins: [clientResolver],
             format: "esm",
+            bundle: true,
           });
 
           const output = {
@@ -93,17 +94,23 @@ export async function routeHandler(req: HonoRequest) {
       })
     );
 
+    console.log(clientEntryPoints);
+
     const bunResult = await build({
-      entrypoints: [...clientEntryPoints],
+      entryPoints: [...clientEntryPoints],
       format: "esm",
       outdir: nodeResolve(process.cwd(), "build"),
+      bundle: true,
+      write: false,
     });
 
     console.log("bun result", bunResult);
 
-    bunResult?.outputs?.forEach(async (file) => {
-      const [, exports] = parse(await file.text());
-      let newContents = await file.text();
+    bunResult?.outputFiles?.forEach(async (file) => {
+      const [, exports] = parse(file.text);
+      let newContents = file.text;
+
+      console.log(exports);
 
       for (const exp of exports) {
         const key = file.path + exp.n;
@@ -118,16 +125,14 @@ export async function routeHandler(req: HonoRequest) {
         newContents += `
         ${exp.ln}.$$id = ${JSON.stringify(key)};
         ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
-			`;
+    	`;
       }
       await writeFile(file.path, newContents);
     });
 
-    console.log("result", result);
-
     const componetsAfterBuild = await Promise.all(
-      result.map(async (page) => {
-        if (!page) return;
+      componets.map(async (page) => {
+        // if (!page) return;
         const componet = (await import(
           join(process.cwd(), "build", `${page.type}.js`)
         )) as Module;

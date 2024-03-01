@@ -6,13 +6,17 @@ declare module "react" {
 
 import React, { Suspense } from "react";
 //@ts-ignore
-import * as rscDomWebpack from "react-server-dom-webpack/server.edge";
+import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
 //@ts-ignore
 import * as rscDomWebpackClient from "react-server-dom-webpack/client";
 
 import { renderToReadableStream } from "react-dom/server";
 import { injectRSCPayload } from "rsc-html-stream/server";
 import { routeHandler } from "./lib/routeHadler.js";
+
+function __webpack_require__(id: any) {
+  return import(id);
+}
 
 const app = new Hono();
 
@@ -39,6 +43,8 @@ app.get("/*", async (c) => {
     clientComponentMap
   );
 
+  console.log(clientComponentMap);
+
   let [s1, s2] = stream.tee();
 
   console.log("here", s1);
@@ -51,6 +57,7 @@ app.get("/*", async (c) => {
 
   let htmlStream = await renderToReadableStream(<Content />, {
     bootstrapModules: ["/build/clientEntry.js"],
+    bootstrapScripts: ["/build/webpackrequire.js"],
   });
 
   let response = htmlStream.pipeThrough(injectRSCPayload(s2));
@@ -64,6 +71,8 @@ export default {
   port: 3000,
   fetch: app.fetch,
 };
+
+console.log("server running ");
 
 const result = await Bun.build({
   entrypoints: ["./src/clientEntry.ts"],

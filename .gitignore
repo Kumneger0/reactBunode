@@ -13,7 +13,7 @@ lerna-debug.log*
 build/
 app/
 .rscInBun/
-
+.turbo
 
 # Caches
 
