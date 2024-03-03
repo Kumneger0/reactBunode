@@ -42,7 +42,10 @@ export async function routeHandler(req: HonoRequest) {
   const url = new URL(req.url);
 
   const searchParams = url.searchParams;
+
   const currentPath = join(process.cwd(), "app", url.pathname);
+
+  console.log(currentPath);
 
   const isPathExists = existsSync(currentPath);
   const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
@@ -57,6 +60,8 @@ export async function routeHandler(req: HonoRequest) {
 
   const splitedPathName = url.pathname.split("/").slice(0, -1).join("/");
   if (!isPathExists) {
+    console.log("fjlafjl");
+
     const pathsToCheckDynicRoute = join(process.cwd(), "app", splitedPathName);
     readdirSync(pathsToCheckDynicRoute).forEach(async (path) => {
       const isDir = statSync(join(pathsToCheckDynicRoute, path)).isDirectory();
@@ -67,10 +72,6 @@ export async function routeHandler(req: HonoRequest) {
         dynamicRouteStatus.slug = removeSquereBrackets;
       }
     });
-  }
-
-  if (!dynamicRouteStatus.isDynamic) {
-    return Error("not found", { cause: currentPath });
   }
 
   const componentPath = dynamicRouteStatus.isDynamic
