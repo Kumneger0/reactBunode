@@ -1,7 +1,5 @@
-import { relative, join } from "node:path";
-import { resolve } from "path";
 import { readFile } from "fs/promises";
-import { file, type BunPlugin } from "bun";
+import { join } from "node:path";
 import { clientEntryPoints } from "../lib/routeHadler";
 const reactComponentRegex = /\.(tsx|jsx)$/;
 
@@ -29,7 +27,6 @@ export const clientResolver: Plugin = {
         return {
           external: true,
           path: `./${filename}.js`,
-          namespace: "",
         };
       }
     });

@@ -1,15 +1,16 @@
+#!/usr/bin/env bun
+
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
 declare module "react" {
   export const use: <T extends Promise<unknown>>(arg: T) => T;
 }
-
-import React, { Suspense } from "react";
+import fs from "fs/promises";
+import React, { Suspense, createElement } from "react";
 //@ts-ignore
 import * as rscDomWebpack from "react-server-dom-webpack/server.browser";
 //@ts-ignore
 import * as rscDomWebpackClient from "react-server-dom-webpack/client";
-
 import { renderToReadableStream, renderToString } from "react-dom/server";
 import { injectRSCPayload } from "rsc-html-stream/server";
 import { routeHandler } from "./lib/routeHadler.js";
@@ -74,7 +75,7 @@ app.get("/*", async (c) => {
 
     const { Layout, Page, props, Loading, clientComponentMap } = handlerResult;
 
-    const stream = await rscDomWebpack.renderToReadableStream(
+    const stream = rscDomWebpack.renderToReadableStream(
       <Layout>
         <Suspense fallback={Loading ? <Loading /> : "load"}>
           <Page {...props} />
@@ -85,16 +86,27 @@ app.get("/*", async (c) => {
 
     let [s1, s2] = stream.tee();
 
+    console.log(s1, s2);
+
     let data;
     function Content() {
       data ??= rscDomWebpackClient.createFromReadableStream(s1);
       return React.use(data);
     }
 
-    let htmlStream = await renderToReadableStream(<Content />, {
-      bootstrapModules: ["/build/clientEntry.js"],
-      bootstrapScripts: ["/build/webpackrequire.js"],
-    });
+    let htmlStream = await renderToReadableStream(
+      createElement(React.use(stream)),
+      {
+        bootstrapModules: ["/build/clientEntry.js"],
+        bootstrapScriptContent: `
+      function __webpack_require__(id) {
+       return import(id);
+         }
+      `,
+      }
+    );
+
+    return new Response(htmlStream);
 
     let response = htmlStream.pipeThrough(injectRSCPayload(s2));
 

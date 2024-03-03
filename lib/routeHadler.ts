@@ -60,8 +60,6 @@ export async function routeHandler(req: HonoRequest) {
 
   const splitedPathName = url.pathname.split("/").slice(0, -1).join("/");
   if (!isPathExists) {
-    console.log("fjlafjl");
-
     const pathsToCheckDynicRoute = join(process.cwd(), "app", splitedPathName);
     readdirSync(pathsToCheckDynicRoute).forEach(async (path) => {
       const isDir = statSync(join(pathsToCheckDynicRoute, path)).isDirectory();
@@ -117,7 +115,7 @@ export async function routeHandler(req: HonoRequest) {
             entryPoints: [path],
             outdir: join(process.cwd(), "build"),
             plugins: [clientResolver],
-            external: getExternalsFromPackageJson(),
+            packages: "external",
             format: "esm",
             bundle: true,
           });
@@ -140,6 +138,7 @@ export async function routeHandler(req: HonoRequest) {
       bundle: true,
       write: false,
       splitting: true,
+      jsxDev: true,
     });
 
     bunResult?.outputFiles?.forEach(async (file) => {
@@ -157,9 +156,9 @@ export async function routeHandler(req: HonoRequest) {
         };
 
         newContents += `
-        ${exp.ln}.$$id = ${JSON.stringify(key)};
-        ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
-    	`;
+          ${exp.ln}.$$id = ${JSON.stringify(key)};
+          ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
+        `;
       }
       await writeFile(file.path, newContents);
     });
