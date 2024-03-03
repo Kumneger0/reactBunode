@@ -1,5 +1,5 @@
 import { parse } from "es-module-lexer";
-import { readFile, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 import type { HonoRequest } from "hono";
 import { relative } from "node:path";
 import { resolve as nodeResolve } from "path";
@@ -7,12 +7,8 @@ import React, { type FC } from "react";
 import packageJson from "../package.json";
 import { clientResolver } from "../plugins/client-component-resolver";
 import { build } from "./_buildCurrentRoute";
-import typescript from "@rollup/plugin-typescript";
-import resolve from "@rollup/plugin-node-resolve";
 
-import { rollup } from "rollup";
 import { join } from "path";
-import terser from "@rollup/plugin-terser";
 export const clientEntryPoints = new Set<string>();
 
 function getExternalsFromPackageJson(): string[] {
@@ -79,6 +75,7 @@ export async function routeHandler(req: HonoRequest) {
             entryPoints: [path],
             outdir: join(process.cwd(), "build"),
             plugins: [clientResolver],
+            external: getExternalsFromPackageJson(),
             format: "esm",
             bundle: true,
           });
@@ -102,6 +99,7 @@ export async function routeHandler(req: HonoRequest) {
       outdir: nodeResolve(process.cwd(), "build"),
       bundle: true,
       write: false,
+      splitting: true,
     });
 
     console.log("bun result", bunResult);

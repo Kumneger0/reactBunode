@@ -6,7 +6,7 @@
     "@types/bun": "^1.0.8"
   },
   "scripts": {
-    "build": "bun --watch index.tsx"
+    "dev": "bun --bun --watch index.tsx"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -21,10 +21,10 @@
     "es-module-lexer": "^1.4.1",
     "esbuild": "latest",
     "hono": "^4.0.6",
-    "react": "18.3.0-next-3706edb81-20230308",
-    "react-dom": "18.3.0-next-3706edb81-20230308",
-    "react-server-dom-webpack": "0.0.0-experimental-41b4714f1-20230328",
     "rsc-html-stream": "0.0.3",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.2",
+    "react": "18.3.0-canary-6c3b8dbfe-20240226",
+    "react-dom": "18.3.0-canary-6c3b8dbfe-20240226",
+    "react-server-dom-webpack": "18.3.0-canary-6c3b8dbfe-20240226"
   }
 }
