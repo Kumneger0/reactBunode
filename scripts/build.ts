@@ -1,46 +1,75 @@
-import { type BuildConfig } from "bun";
+import { file, type BuildConfig } from "bun";
 import fs from "node:fs/promises";
-import { resolve } from "path";
+import { resolve, join } from "path";
 
 async function build(config: BuildConfig) {
   try {
     const result = await Bun.build(config);
+    return result;
   } catch (err) {
-    console.log(err);
+    err;
   }
 }
-const dir = resolve(process.cwd(), "app");
-const buildDir = resolve(process.cwd(), "build");
+const dir = resolve(process.cwd());
 
-const files = await fs.readdir(dir);
+const buildDir = resolve(process.cwd());
 
-files.forEach(async (file) => {
-  const filePath = resolve(dir, file);
-  const stat = await fs.stat(filePath);
-  if (stat.isFile()) {
-    build({ entrypoints: [filePath], minify: true, outdir: buildDir });
-  }
+function getAppPath(baseDir: string) {
+  return resolve(dir, baseDir);
+}
 
+function getBuildPath() {
+  return resolve(buildDir, "build");
+}
+
+async function handleBuild() {
+  buildRoutes();
+}
+
+async function buildRoutes(baseDir = "app") {
+  const path = getAppPath(baseDir);
+  const files = await fs.readdir(path);
+  files.forEach(async (file) => {
+    const eachfileAbsolutePath = resolve(path, file);
+    const stat = await fs.stat(eachfileAbsolutePath);
+    if (stat.isDirectory()) {
+      return buildRoutes(join(baseDir, file));
+    }
+    if (stat.isFile()) {
+      const destinationDir =
+        baseDir == "app"
+          ? ""
+          : (() => {
+              const arrofPath = baseDir.split("/").slice(1);
+              return join(...arrofPath);
+            })();
+      watchFileChanges(eachfileAbsolutePath, destinationDir);
+      build({
+        entrypoints: [eachfileAbsolutePath],
+        outdir: resolve(process.cwd(), "build", destinationDir),
+      });
+    }
+  });
+}
+
+async function watchFileChanges(filePath: string, destinationDir: string) {
   const { signal, abort } = new AbortController();
 
-  try {
-    const watcher = fs.watch(filePath, { signal });
-    for await (const event of watcher) {
-      if (event.eventType == "change") {
-        console.log("change detected on file rebuilding", event.filename);
+  const watcher = fs.watch(filePath, { signal });
+  for await (const { eventType } of watcher) {
+    if (eventType == "change") {
+      ("---------------------------------------");
+      `compiling ${filePath}`;
 
-        await build({
-          entrypoints: [filePath],
-          minify: true,
-          outdir: buildDir,
-        });
-        console.log("done");
-      }
+      await build({
+        entrypoints: [filePath],
+        minify: true,
+        outdir: destinationDir,
+      });
+      ("done");
+      ("-----------------------------------------");
     }
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") return;
-    throw err;
   }
-});
+}
 
-export { build };
+export { handleBuild };
