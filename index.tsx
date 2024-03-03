@@ -16,11 +16,15 @@ import { routeHandler } from "./lib/routeHadler.js";
 import { existsSync } from "fs";
 
 import { join } from "path";
+import { buildRoutes } from "./scripts/build.js";
 
 const app = new Hono();
 
-//handle api route endpoints
-
+/**
+ * Handles API endpoint routing.
+ * Checks if endpoint file exists and handles routing to the appropriate handler function for the request method.
+ * Returns 404 if endpoint not found.
+ */
 app.use("/api/*", async (c, next) => {
   const pathname = new URL(c.req.url).pathname;
   const reqMethod = c.req.method;
@@ -31,6 +35,11 @@ app.use("/api/*", async (c, next) => {
   const module = (await import(endpointFilePath)) as {
     [k: string]: (req: Request) => Response;
   };
+
+  /**
+   * Creates an object mapping HTTP methods to handler functions from the route module.
+   * This allows lookup of the appropriate handler function for a given request method.
+   */
   const endpointFuncions = Object.fromEntries(
     Object.keys(module).map((key) => {
       const method = key?.toLowerCase();
@@ -54,36 +63,48 @@ app.use(
 app.get("/*", async (c) => {
   const url = new URL(c.req.url);
   if (url.pathname == "/favicon.ico") return;
-  const { Layout, Page, searchParams, Loading, clientComponentMap } =
-    await routeHandler(c.req);
 
-  const stream = await rscDomWebpack.renderToReadableStream(
-    <Layout>
-      <Suspense fallback={Loading ? <Loading /> : "load"}>
-        <Page searchParams={searchParams} />
-      </Suspense>
-    </Layout>,
-    clientComponentMap
-  );
+  try {
+    const handlerResult = await routeHandler(c.req);
 
-  let [s1, s2] = stream.tee();
+    if (handlerResult instanceof Error) {
+      if (handlerResult.message == "not found") return sendNotFoundHTML();
+      return new Response(handlerResult.message, { status: 500 });
+    }
 
-  let data;
-  function Content() {
-    data ??= rscDomWebpackClient.createFromReadableStream(s1);
-    return React.use(data);
+    const { Layout, Page, props, Loading, clientComponentMap } = handlerResult;
+
+    const stream = await rscDomWebpack.renderToReadableStream(
+      <Layout>
+        <Suspense fallback={Loading ? <Loading /> : "load"}>
+          <Page {...props} />
+        </Suspense>
+      </Layout>,
+      clientComponentMap
+    );
+
+    let [s1, s2] = stream.tee();
+
+    let data;
+    function Content() {
+      data ??= rscDomWebpackClient.createFromReadableStream(s1);
+      return React.use(data);
+    }
+
+    let htmlStream = await renderToReadableStream(<Content />, {
+      bootstrapModules: ["/build/clientEntry.js"],
+      bootstrapScripts: ["/build/webpackrequire.js"],
+    });
+
+    let response = htmlStream.pipeThrough(injectRSCPayload(s2));
+
+    return new Response(response);
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message == "not found") return sendNotFoundHTML();
+      return new Response(err.message, { status: 500 });
+    }
   }
-
-  let htmlStream = await renderToReadableStream(<Content />, {
-    bootstrapModules: ["/build/clientEntry.js"],
-    bootstrapScripts: ["/build/webpackrequire.js"],
-  });
-
-  let response = htmlStream.pipeThrough(injectRSCPayload(s2));
-
-  console.log("responce", response);
-
-  return new Response(response);
 });
 
 export default {
@@ -122,6 +143,8 @@ function APINoutFOundPage() {
     </html>
   );
 }
+
+buildRoutes();
 
 function sendNotFoundHTML() {
   const string = renderToString(<APINoutFOundPage />);

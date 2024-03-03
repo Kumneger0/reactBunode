@@ -18,16 +18,12 @@ export const clientResolver: Plugin = {
 
       const path = join(process.cwd(), "app", `${filename}.tsx`);
 
-      console.log(path);
-
       const contents = await readFile(path, "utf-8");
 
       if (
         contents.startsWith('"use client"') ||
         contents.startsWith("'use client'")
       ) {
-        console.log("client componet deteced");
-        console.log(arg.path.replace(reactComponentRegex, ".js"));
         clientEntryPoints.add(path);
 
         return {

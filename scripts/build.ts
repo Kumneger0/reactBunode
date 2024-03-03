@@ -12,21 +12,15 @@ async function build(config: BuildConfig) {
 }
 const dir = resolve(process.cwd());
 
-const buildDir = resolve(process.cwd());
-
 function getAppPath(baseDir: string) {
   return resolve(dir, baseDir);
-}
-
-function getBuildPath() {
-  return resolve(buildDir, "build");
 }
 
 async function handleBuild() {
   buildRoutes();
 }
 
-async function buildRoutes(baseDir = "app") {
+export async function buildRoutes(baseDir = "app") {
   const path = getAppPath(baseDir);
   const files = await fs.readdir(path);
   files.forEach(async (file) => {
@@ -46,7 +40,7 @@ async function buildRoutes(baseDir = "app") {
       watchFileChanges(eachfileAbsolutePath, destinationDir);
       build({
         entrypoints: [eachfileAbsolutePath],
-        outdir: resolve(process.cwd(), "build", destinationDir),
+        outdir: resolve(process.cwd(), "dist", destinationDir),
       });
     }
   });

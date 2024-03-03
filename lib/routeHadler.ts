@@ -1,3 +1,4 @@
+import { existsSync, readdirSync } from "fs";
 import { parse } from "es-module-lexer";
 import { writeFile } from "fs/promises";
 import type { HonoRequest } from "hono";
@@ -6,8 +7,8 @@ import { resolve as nodeResolve } from "path";
 import React, { type FC } from "react";
 import packageJson from "../package.json";
 import { clientResolver } from "../plugins/client-component-resolver";
-import { build } from "./_buildCurrentRoute";
-
+import { build } from "./buildPages";
+import { statSync } from "fs";
 import { join } from "path";
 export const clientEntryPoints = new Set<string>();
 
@@ -25,7 +26,6 @@ function getExternalsFromPackageJson(): string[] {
     }
   }
 
-  // Removing potential duplicates between dev and peer
   return Array.from(new Set(externals));
 }
 
@@ -44,15 +44,48 @@ export async function routeHandler(req: HonoRequest) {
   const searchParams = url.searchParams;
   const currentPath = join(process.cwd(), "app", url.pathname);
 
-  const pagePath = join(currentPath, "page.tsx");
-  const loadingFilePath = join(currentPath, "loading.tsx");
+  const isPathExists = existsSync(currentPath);
+  const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
+
+  let dynamicRouteStatus: { isDynamic: boolean; path: string } & Record<
+    string,
+    any
+  > = {
+    isDynamic: false,
+    path: "",
+  };
+
+  const splitedPathName = url.pathname.split("/").slice(0, -1).join("/");
+  if (!isPathExists) {
+    const pathsToCheckDynicRoute = join(process.cwd(), "app", splitedPathName);
+    readdirSync(pathsToCheckDynicRoute).forEach(async (path) => {
+      const isDir = statSync(join(pathsToCheckDynicRoute, path)).isDirectory();
+      const isDynamic = isDir && dynamicRouteRegEx.test(path);
+      if (isDynamic) {
+        const removeSquereBrackets = path.replace("[", "").replace("]", "");
+        dynamicRouteStatus = { isDynamic, path };
+        dynamicRouteStatus.slug = removeSquereBrackets;
+      }
+    });
+  }
+
+  if (!dynamicRouteStatus.isDynamic) {
+    return Error("not found", { cause: currentPath });
+  }
+
+  const componentPath = dynamicRouteStatus.isDynamic
+    ? join(process.cwd(), "app", splitedPathName, dynamicRouteStatus.path)
+    : currentPath;
+
+  const pagePath = join(componentPath, "page.tsx");
+  const loadingFilePath = join(componentPath, "loading.tsx");
   const rootLayoutPath = join(process.cwd(), "app", "layout.tsx");
 
   const isPageExists = await Bun.file(pagePath).exists();
   const isrootLayoutExists = await Bun.file(rootLayoutPath).exists();
 
   if (!isPageExists) {
-    throw new Error("we can't find page.tsx or page.jsx file in current route");
+    throw new Error("not found", { cause: pagePath });
   }
 
   if (!isrootLayoutExists) {
@@ -61,15 +94,23 @@ export async function routeHandler(req: HonoRequest) {
 
   const clientComponentMap: Record<any, any> = {};
 
-  const componets = [
+  const unfillteredPagePaths = [
     { path: pagePath, type: "page" as const },
     { path: rootLayoutPath, type: "layout" as const },
     { path: loadingFilePath, type: "loading" as const },
   ];
 
+  const existsPromises = unfillteredPagePaths.map(async ({ path, type }) => {
+    return { path, exists: await Bun.file(path).exists(), type };
+  });
+
+  const results = await Promise.all(existsPromises);
+
+  const components = results.filter((result) => result.exists);
+
   try {
     const result = await Promise.all(
-      componets.map(async ({ path, type }) => {
+      components.map(async ({ path, type }) => {
         try {
           const result = await build({
             entryPoints: [path],
@@ -91,8 +132,6 @@ export async function routeHandler(req: HonoRequest) {
       })
     );
 
-    console.log(clientEntryPoints);
-
     const bunResult = await build({
       entryPoints: [...clientEntryPoints],
       format: "esm",
@@ -102,13 +141,9 @@ export async function routeHandler(req: HonoRequest) {
       splitting: true,
     });
 
-    console.log("bun result", bunResult);
-
     bunResult?.outputFiles?.forEach(async (file) => {
       const [, exports] = parse(file.text);
       let newContents = file.text;
-
-      console.log(exports);
 
       for (const exp of exports) {
         const key = file.path + exp.n;
@@ -129,7 +164,7 @@ export async function routeHandler(req: HonoRequest) {
     });
 
     const componetsAfterBuild = await Promise.all(
-      componets.map(async (page) => {
+      components.map(async (page) => {
         // if (!page) return;
         const componet = (await import(
           join(process.cwd(), "build", `${page.type}.js`)
@@ -138,11 +173,17 @@ export async function routeHandler(req: HonoRequest) {
       })
     );
 
+    const props: Record<string, any> = { searchParams };
+
+    props[dynamicRouteStatus?.slug as keyof typeof props] = decodeURIComponent(
+      url.pathname.split("/").at(-1) as string
+    );
+
     return {
       Page: componetsAfterBuild.find(({ type }) => type === "page")?.default!,
       Layout: componetsAfterBuild.find(({ type }) => type === "layout")
         ?.default!,
-      searchParams,
+      props,
       Loading: componetsAfterBuild.find(({ type }) => type === "loading")
         ?.default,
       clientComponentMap,
