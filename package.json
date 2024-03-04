@@ -8,6 +8,9 @@
   "scripts": {
     "dev": "bun --bun --watch index.tsx"
   },
+  "bin": {
+    "rscbun": "src/index.tsx"
+  },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
