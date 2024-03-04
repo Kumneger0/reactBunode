@@ -10,6 +10,7 @@ import { clientResolver } from "../plugins/client-component-resolver";
 import { build } from "./buildPages";
 import { statSync } from "fs";
 import { join } from "path";
+import { randomUUID } from "node:crypto";
 export const clientEntryPoints = new Set<string>();
 
 function getExternalsFromPackageJson(): string[] {
@@ -137,7 +138,6 @@ export async function routeHandler(req: HonoRequest) {
       outdir: nodeResolve(process.cwd(), "build"),
       bundle: true,
       write: false,
-      splitting: true,
       jsxDev: true,
     });
 
@@ -147,16 +147,16 @@ export async function routeHandler(req: HonoRequest) {
 
       for (const exp of exports) {
         const key = file.path + exp.n;
-        clientComponentMap[key] = {
+        const uuid = randomUUID({ disableEntropyCache: true });
+        clientComponentMap[uuid] = {
           id: `/${relative(process.cwd(), file.path)}`,
-
           name: exp.n,
           chunks: [],
           async: true,
         };
 
         newContents += `
-          ${exp.ln}.$$id = ${JSON.stringify(key)};
+          ${exp.ln}.$$id = ${JSON.stringify(uuid)};
           ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
         `;
       }

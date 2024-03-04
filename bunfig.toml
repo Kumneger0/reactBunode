@@ -1,1 +1,7 @@
 preload = ["./plugins/client-component-resolver.ts"]
+peer = true
+smol = true
+logLevel = "debug"
+
+[install]
+exact = true
