@@ -10,16 +10,17 @@ declare module "react" {
 import * as rscDomWebpack from "react-server-dom-webpack/server.edge.js";
 //@ts-ignore
 import { existsSync } from "fs";
-import {
-  renderToReadableStream,
-  renderToString,
-} from "react-dom/server.edge.js";
+import { renderToReadableStream, renderToString } from "react-dom/server";
 import * as rscDomWebpackClient from "react-server-dom-webpack/client";
 import { injectRSCPayload } from "rsc-html-stream/server";
 import { routeHandler } from "./lib/routeHadler.js";
 
 import { join } from "path";
 import { buildRoutes } from "./scripts/build.js";
+import { build as esbuild } from "esbuild";
+import { aliasPath } from "esbuild-plugin-alias-path";
+
+console.log(renderToReadableStream);
 
 const app = new Hono();
 
@@ -109,7 +110,13 @@ app.get("/*", async (c) => {
 
     let response = htmlStream.pipeThrough(injectRSCPayload(s2));
 
-    return new Response(response);
+    console.log("responce", response);
+
+    return new Response(response, {
+      headers: {
+        "Content-Type": "x-component",
+      },
+    });
   } catch (err) {
     if (err instanceof Error) {
       if (err.message == "not found") return sendNotFoundHTML();
@@ -125,10 +132,13 @@ export default {
 
 console.log("server running ");
 
-const result = await Bun.build({
-  entrypoints: ["./src/clientEntry.ts"],
+const result = await esbuild({
+  entryPoints: ["./src/clientEntry.ts"],
   outdir: "./build",
-  target: "browser",
+  bundle: true,
+  format: "esm",
+  jsx: "automatic",
+  plugins: [],
 });
 
 function APINoutFOundPage() {

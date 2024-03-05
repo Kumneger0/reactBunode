@@ -1,34 +1,24 @@
-import { existsSync, readdirSync } from "fs";
 import { parse } from "es-module-lexer";
+import { aliasPath } from "esbuild-plugin-alias-path";
+import { existsSync, readdirSync, statSync } from "fs";
 import { writeFile } from "fs/promises";
 import type { HonoRequest } from "hono";
+import { randomUUID } from "node:crypto";
 import { relative } from "node:path";
-import { resolve as nodeResolve } from "path";
+import { join, resolve as nodeResolve } from "path";
 import React, { type FC } from "react";
-import packageJson from "../package.json";
 import { clientResolver } from "../plugins/client-component-resolver";
 import { build } from "./buildPages";
-import { statSync } from "fs";
-import { join } from "path";
-import { randomUUID } from "node:crypto";
 export const clientEntryPoints = new Set<string>();
 
-function getExternalsFromPackageJson(): string[] {
-  const sections: (keyof typeof packageJson)[] = [
-    "dependencies",
-    "devDependencies",
-    "peerDependencies",
-  ];
-  const externals: string[] = [];
+const alias = aliasPath({
+  alias: {
+    react: "./node_modules/react",
+    "react-dom": "./node_modules/react-dom",
+  },
+});
 
-  for (const section of sections) {
-    if (packageJson[section]) {
-      externals.push(...Object.keys(packageJson[section]));
-    }
-  }
-
-  return Array.from(new Set(externals));
-}
+console.log(alias);
 
 interface BasePageProps {
   searchParams?: URL["searchParams"];
@@ -119,6 +109,8 @@ export async function routeHandler(req: HonoRequest) {
             packages: "external",
             format: "esm",
             bundle: true,
+            jsxDev: true,
+            jsx: "automatic",
           });
 
           const output = {
@@ -139,7 +131,10 @@ export async function routeHandler(req: HonoRequest) {
       bundle: true,
       write: false,
       jsxDev: true,
+      jsx: "automatic",
     });
+
+    console.log("client build stataus", bunResult);
 
     bunResult?.outputFiles?.forEach(async (file) => {
       const [, exports] = parse(file.text);
