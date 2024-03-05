@@ -1,5 +1,4 @@
 import { parse } from "es-module-lexer";
-import { aliasPath } from "esbuild-plugin-alias-path";
 import { existsSync, readdirSync, statSync } from "fs";
 import { writeFile } from "fs/promises";
 import type { HonoRequest } from "hono";
@@ -26,8 +25,6 @@ export async function routeHandler(req: HonoRequest) {
   const searchParams = url.searchParams;
 
   const currentPath = join(process.cwd(), "app", url.pathname);
-
-  console.log(currentPath);
 
   const isPathExists = existsSync(currentPath);
   const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
@@ -93,6 +90,7 @@ export async function routeHandler(req: HonoRequest) {
     const result = await Promise.all(
       components.map(async ({ path, type }) => {
         try {
+          console.log("path", path);
           const result = await build({
             entryPoints: [path],
             outdir: join(process.cwd(), "build"),
@@ -101,7 +99,6 @@ export async function routeHandler(req: HonoRequest) {
             format: "esm",
             bundle: true,
             jsxDev: true,
-            jsx: "automatic",
           });
 
           const output = {
@@ -124,8 +121,6 @@ export async function routeHandler(req: HonoRequest) {
       jsxDev: true,
       jsx: "automatic",
     });
-
-    console.log("client build stataus", bunResult);
 
     bunResult?.outputFiles?.forEach(async (file) => {
       const [, exports] = parse(file.text);

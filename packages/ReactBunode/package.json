@@ -6,13 +6,13 @@
     "@types/bun": "^1.0.8"
   },
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.tsx"
   },
   "scripts": {
-    "dev": "bun index.ts"
+    "build": "tsc"
   },
   "bin": {
-    "reactBunode": "./index.ts"
+    "reactBunode": "./index.tsx"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -24,9 +24,9 @@
     "es-module-lexer": "^1.4.1",
     "esbuild": "^0.17.14",
     "hono": "^4.0.6",
-    "react": "18.3.0-next-3706edb81-20230308",
-    "react-dom": "18.3.0-next-3706edb81-20230308",
-    "react-server-dom-webpack": "18.3.0-next-3706edb81-20230308",
+    "react": "canary",
+    "react-dom": "canary",
+    "react-server-dom-webpack": "canary",
     "rsc-html-stream": "0.0.3",
     "tslib": "^2.6.2"
   }

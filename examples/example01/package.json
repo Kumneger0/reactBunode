@@ -1,0 +1,12 @@
+{
+  "name": "example01",
+  "private": "true",
+  "type": "module",
+  "scripts": {
+    "dev": "reactBunode"
+  },
+  "dependencies": {
+    "hono": "^4.0.9",
+    "reactBunode": "link:reactBunode"
+  }
+}

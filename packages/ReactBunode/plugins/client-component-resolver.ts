@@ -22,6 +22,7 @@ export const clientResolver: Plugin = {
         contents.startsWith('"use client"') ||
         contents.startsWith("'use client'")
       ) {
+        console.log("client component", path);
         clientEntryPoints.add(path);
 
         return {
