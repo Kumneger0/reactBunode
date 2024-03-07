@@ -1,27 +1,24 @@
 {
-  "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "moduleDetection": "force",
-    "allowJs": true,
-    /* Bundler mode */
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    /* Linting */
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
-    "checkJs": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "target": "ESNext",
-    "jsx": "react-jsx",
-    "noEmit": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
-  }
+	"compilerOptions": {
+		"lib": ["ESNext", "DOM"],
+		"moduleDetection": "force",
+		"allowJs": true,
+		/* Bundler mode */
+		"allowImportingTsExtensions": true,
+		"verbatimModuleSyntax": true,
+		/* Linting */
+		"skipLibCheck": true,
+		"noFallthroughCasesInSwitch": true,
+		"forceConsistentCasingInFileNames": true,
+		"checkJs": true,
+		"module": "ESNext",
+		"moduleResolution": "Node",
+		"target": "ESNext",
+		"jsx": "react-jsx",
+		"noEmit": true,
+		"strict": true,
+		"noImplicitAny": false,
+		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true
+	}
 }

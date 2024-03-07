@@ -1,14 +1,14 @@
 {
   "name": "workspaces",
   "private": "true",
-  "type": "module",
-  "workspaces": [
-    "packages/*",
-    "examples/*"
-  ],
   "scripts": {
     "clean": "rm -rf node_modules packages/ReactBunode/node_modules packages/ReactBunode/node_modules bun.lockb packages/ReactBunode/bun.lockb ",
     "dev": "turbo run dev",
     "build": "turbo run build"
-  }
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ]
 }
