@@ -41,9 +41,7 @@ function APINoutFOundPage() {
 }
 
 export async function getPageComponents(outdir: string) {
-	console.log(outdir, 'builddir');
 	const content = readFileSync(join(outdir, 'page.js'), 'utf-8');
-	console.log(content);
 	const Layout = (await import(join(process.cwd(), 'build', 'layout.js'))).default;
 	const Page = (await import(join(outdir, 'page.js'))).default;
 	const Loading = existsSync(join(outdir, 'loading.js'))

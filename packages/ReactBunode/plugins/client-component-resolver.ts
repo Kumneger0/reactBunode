@@ -11,7 +11,6 @@ export const clientResolver: Plugin = {
 	setup(build) {
 		build.onResolve({ filter: reactComponentRegex }, async (arg) => {
 			const filename = `${arg.path?.split('/')?.at(-1)?.split('.')[0]}`;
-			console.log(filename);
 			const path = join(process.cwd(), 'app', `${filename}.tsx`);
 
 			const contents = await readFile(path, 'utf-8');

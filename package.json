@@ -1,18 +1,22 @@
 {
-	"name": "workspaces",
-	"private": "true",
-	"scripts": {
-		"clean": "rm -rf node_modules packages/ReactBunode/node_modules packages/ReactBunode/node_modules bun.lockb packages/ReactBunode/bun.lockb ",
-		"dev": "turbo run dev",
-		"build": "turbo run build",
-		"start": "turbo run start"
-	},
-	"type": "module",
-	"workspaces": [
-		"packages/*",
-		"examples/*"
-	],
-	"dependencies": {
-		"react-async-ssr": "0.7.2"
-	}
+  "name": "workspaces",
+  "private": "true",
+  "scripts": {
+    "clean": "rm -rf node_modules packages/ReactBunode/node_modules packages/ReactBunode/node_modules bun.lockb packages/ReactBunode/bun.lockb ",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "dependencies": {
+    "dom-parser": "1.1.5",
+    "jsdom": "24.0.0",
+    "prettier": "3.2.5",
+    "react": "canary",
+    "react-dom": "canary"
+  }
 }

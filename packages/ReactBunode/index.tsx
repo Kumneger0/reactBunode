@@ -100,15 +100,18 @@ function devMode() {
 			let htmlStream = await renderToReadableStream(<Content />, {
 				bootstrapModules: ['/build/root-client.js'],
 				bootstrapScriptContent: `
-      window.__webpack_require__ = (id) => {
-       return import(id);
+                   window.__webpack_require__ = (id) => {
+                      return import(id);
          }
       `
 			});
 
 			let response = htmlStream.pipeThrough(injectRSCPayload(s2));
-
-			return new Response(response);
+			return new Response(response, {
+				headers: {
+					'Content-Type': 'text/html'
+				}
+			});
 		} catch (err) {
 			if (err instanceof Error) {
 				if (err.message == 'not found') return sendNotFoundHTML();

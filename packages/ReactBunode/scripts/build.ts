@@ -24,9 +24,7 @@ async function handleBuild(baseDir, outDir) {
 
 export async function buildRoutes(baseDir = 'app', outdir) {
 	const path = getAppPath(baseDir);
-	console.log('building');
 	const files = await fs.readdir(path);
-	console.log(files, 'files');
 	files.forEach(async (file) => {
 		const eachfileAbsolutePath = resolve(path, file);
 		const stat = await fs.stat(eachfileAbsolutePath);
@@ -40,7 +38,7 @@ export async function buildRoutes(baseDir = 'app', outdir) {
 					: (() => {
 							const arrofPath = baseDir.split('/').slice(1);
 							return join(...arrofPath);
-						})();
+					  })();
 			watchFileChanges(eachfileAbsolutePath, destinationDir);
 			const result = await esbuild({
 				entryPoints: [path],
@@ -51,15 +49,12 @@ export async function buildRoutes(baseDir = 'app', outdir) {
 				bundle: true,
 				jsxDev: true
 			});
-			console.log(result);
 		}
 	});
 }
 
 async function watchFileChanges(filePath: string, destinationDir: string) {
 	const { signal, abort } = new AbortController();
-
-	console.log('out dir');
 
 	const watcher = fs.watch(filePath, { signal });
 	for await (const { eventType } of watcher) {

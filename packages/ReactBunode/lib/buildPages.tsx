@@ -3,8 +3,9 @@ import { readdirSync, statSync, existsSync } from 'fs';
 import fs from 'node:fs/promises';
 import { join, resolve } from 'path';
 import { type FC } from 'react';
-
+import { JSDOM } from 'jsdom';
 import React from 'react';
+import * as prettier from 'prettier';
 
 //@ts-ignore
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
@@ -89,7 +90,6 @@ function generateStaticHTMLPlugin(): Plugin {
 										staticPaths: Array<Record<string, any>>;
 									};
 									if (staticPaths?.length) {
-										console.log(staticPaths);
 										staticPaths.map(async (prop) => {
 											const html = await readHtmlFromStreamAndSaveToDisk(
 												join(path, file),
@@ -98,7 +98,6 @@ function generateStaticHTMLPlugin(): Plugin {
 											);
 											if (html) {
 												const dir = join(path, Object.values(prop).join('/'));
-												console.log(dir);
 												if (!existsSync(dir)) {
 													await fs.mkdir(dir);
 													await fs.writeFile(join(dir, 'index.html'), html);
@@ -121,7 +120,7 @@ function generateStaticHTMLPlugin(): Plugin {
 					currentCompiledFileCount += 1;
 					if (currentCompiledFileCount == fileCount) {
 						convertoHTML().then(() => {
-							console.log('finished');
+							console.log('done');
 						});
 					}
 				} catch (err) {
@@ -132,6 +131,21 @@ function generateStaticHTMLPlugin(): Plugin {
 	};
 }
 
+const formatConfig = {
+	parser: 'html',
+	useTabs: true,
+	singleQuote: true,
+	printWidth: 100,
+	overrides: [
+		{
+			options: {
+				useTabs: false,
+				tabWidth: 2
+			}
+		}
+	]
+};
+
 async function readHtmlFromStreamAndSaveToDisk(
 	path: string,
 	props: Record<string, any>,
@@ -140,7 +154,11 @@ async function readHtmlFromStreamAndSaveToDisk(
 	const { default: Layout } = await import(join(outdir, 'layout.js'));
 	if (await fs.exists(join(path, 'page.js'))) {
 		const { default: Page } = await import(join(path, 'page.js'));
-		const html = await generatePagesStatically({ Layout, Page, props });
+		const html = await prettier.format(
+			await addMetaData(await generatePagesStatically({ Layout, Page, props }), path),
+			formatConfig
+		);
+
 		if (!save) return html;
 		await fs.writeFile(join(path, 'index.html'), html);
 	}
@@ -213,3 +231,47 @@ async function generatePagesStatically({
 	await readHtml();
 	return html;
 }
+
+async function addMetaData(html: string, path: string): Promise<string> {
+	const metadata = (await import(join(path, 'page.js'))).metadata as Metadata;
+	const dom = new JSDOM(html) as { window: { document: Document }; serialize: () => string };
+	if (!metadata) return html;
+	const title = dom.window.document.getElementsByTagName('title')[0];
+	if (title && metadata.title) {
+		title.textContent = metadata.title;
+	}
+	if (!title && metadata.title) {
+		dom.window.document.head.innerHTML += `<title>${metadata.title}</title>`;
+		dom.window.document.head.innerHTML += `<meta property="og:title" content="${metadata.title}" />`;
+	}
+	if (metadata.openGraph) {
+		Object.keys(metadata.openGraph).map((key) => {
+			if (Array.isArray(metadata.openGraph[key])) {
+				metadata.openGraph[key].forEach((v) => {
+					if (key == 'images') {
+						dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${v.url}" />`;
+					}
+				});
+			}
+			if (typeof metadata.openGraph[key] == 'string') {
+				dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metadata.openGraph[key]}" />`;
+			}
+		});
+	}
+	if (metadata.descreption) {
+		dom.window.document.head.innerHTML += `<meta name="description" content="${metadata.descreption}" />`;
+		dom.window.document.head.innerHTML += `<meta property="og:description" content="${metadata.descreption}" />`;
+	}
+	const result = dom.serialize();
+	return result;
+}
+
+export const metadata = {
+	title: 'this is string',
+	descreption: 'this is descreption',
+	openGraph: {
+		images: [{ url: `og image url` }]
+	}
+} as const;
+
+type Metadata = typeof metadata;

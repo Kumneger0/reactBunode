@@ -1,14 +1,16 @@
 {
-	"name": "example01",
-	"private": "true",
-	"type": "module",
-	"scripts": {
-		"dev": "reactBunode dev",
-		"build": "reactBunode build",
-		"start": "reactBunode start"
-	},
-	"dependencies": {
-		"hono": "^4.0.9",
-		"reactBunode": "link:reactBunode"
-	}
+  "name": "example01",
+  "private": "true",
+  "type": "module",
+  "scripts": {
+    "dev": "reactBunode dev",
+    "build": "reactBunode build",
+    "start": "reactBunode start"
+  },
+  "dependencies": {
+    "hono": "^4.0.9",
+    "react": "canary",
+    "react-dom": "canary",
+    "reactBunode": "link:reactBunode"
+  }
 }
