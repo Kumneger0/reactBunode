@@ -11,7 +11,7 @@ import { build } from 'esbuild';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { renderToReadableStream } from 'react-dom/server';
-import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
+import * as rscDomWebpackClient from 'react-server-dom-webpack/client';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { buildForProduction } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
@@ -79,8 +79,6 @@ function devMode() {
 
 			const { Layout, Loading, Page } = await getPageComponents(outdir);
 
-			console.log(props);
-
 			const stream = rscDomWebpack.renderToReadableStream(
 				<Layout>
 					<Suspense fallback={Loading ? <Loading /> : 'load'}>
@@ -112,13 +110,13 @@ function devMode() {
 
 			return new Response(response);
 		} catch (err) {
-			console.error(err);
 			if (err instanceof Error) {
 				if (err.message == 'not found') return sendNotFoundHTML();
 				return new Response(err.message, { status: 500 });
 			}
 		}
 	});
+	console.log('server started on port', 3000);
 }
 
 build({
