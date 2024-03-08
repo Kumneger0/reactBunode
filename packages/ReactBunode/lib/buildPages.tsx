@@ -63,8 +63,9 @@ export async function buildForProduction(baseDir = 'app') {
 const directoryPath = join(process.cwd(), 'app');
 const fileCount = countFilesInDirectory(directoryPath);
 
-const compiledFilePath = join(process.cwd(), 'dist');
+const outdir = join(process.cwd(), 'dist');
 let currentCompiledFileCount = 0;
+const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
 
 const bundleFileNames = ['layout.js', 'page.js'];
 function generateStaticHTMLPlugin(): Plugin {
@@ -72,15 +73,9 @@ function generateStaticHTMLPlugin(): Plugin {
 		name: 'generate-static-html',
 		setup(build) {
 			build.onEnd(async (result) => {
-				console.log('on edn');
 				async function convertoHTML(baseDir = 'dist') {
-					const { default: Layout } = await import(join(compiledFilePath, 'layout.js'));
+					if (baseDir == 'dist') readHtmlFromStreamAndSaveToDisk(outdir, {});
 
-					if (baseDir == 'dist') {
-						const { default: Page } = await import(join(compiledFilePath, 'page.js'));
-						const html = await generatePagesStatically({ Layout, Page, props: {} });
-						await fs.writeFile(join(compiledFilePath, 'index.html'), html);
-					}
 					const path = getAppPath(baseDir);
 					const files = await fs.readdir(path);
 					await Promise.all(
@@ -89,19 +84,35 @@ function generateStaticHTMLPlugin(): Plugin {
 							const stat = await fs.stat(eachfileAbsolutePath);
 
 							if (stat.isDirectory()) {
-								if (await fs.exists(join(path, file, 'page.js'))) {
-									const { default: Page } = await import(join(path, file, 'page.js'));
-									const html = await generatePagesStatically({ Layout, Page, props: {} });
-									await fs.writeFile(join(path, file, 'index.html'), html);
-									bundleFileNames.map(async (fName) => {
-										if (await fs.exists(join(path, file, fName))) {
-											console.log('deleteing ', join(path, file, fName));
-											await fs.rm(join(path, file, fName));
-										}
-									});
+								if (dynamicRouteRegEx.test(file)) {
+									const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
+										staticPaths: Array<Record<string, any>>;
+									};
+									if (staticPaths?.length) {
+										console.log(staticPaths);
+										staticPaths.map(async (prop) => {
+											const html = await readHtmlFromStreamAndSaveToDisk(
+												join(path, file),
+												prop,
+												false
+											);
+											if (html) {
+												const dir = join(path, Object.values(prop).join('/'));
+												console.log(dir);
+												if (!existsSync(dir)) {
+													await fs.mkdir(dir);
+													await fs.writeFile(join(dir, 'index.html'), html);
+												}
+											}
+										});
+										return;
+									}
 								}
-
+								await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
 								return convertoHTML(join(baseDir, file));
+							}
+							if (bundleFileNames.includes(file)) {
+								fs.rm(join(path, file));
 							}
 						})
 					);
@@ -121,7 +132,21 @@ function generateStaticHTMLPlugin(): Plugin {
 	};
 }
 
-function countFilesInDirectory(directoryPath) {
+async function readHtmlFromStreamAndSaveToDisk(
+	path: string,
+	props: Record<string, any>,
+	save = true
+) {
+	const { default: Layout } = await import(join(outdir, 'layout.js'));
+	if (await fs.exists(join(path, 'page.js'))) {
+		const { default: Page } = await import(join(path, 'page.js'));
+		const html = await generatePagesStatically({ Layout, Page, props });
+		if (!save) return html;
+		await fs.writeFile(join(path, 'index.html'), html);
+	}
+}
+
+function countFilesInDirectory(directoryPath: string) {
 	let count = 0;
 
 	const items = readdirSync(directoryPath);
@@ -183,9 +208,7 @@ async function generatePagesStatically({
 	async function readHtml() {
 		const { done, value } = await reader.read();
 		html += Decoder.decode(value);
-		if (!done) {
-			readHtml();
-		}
+		if (!done) readHtml();
 	}
 	await readHtml();
 	return html;
