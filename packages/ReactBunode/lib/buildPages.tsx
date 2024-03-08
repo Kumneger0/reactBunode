@@ -204,7 +204,7 @@ async function generatePagesStatically({
 }) {
 	const stream = rscDomWebpack.renderToReadableStream(
 		<Layout>
-			<Page id="this is test id" {...props} />
+			<Page {...props} />
 		</Layout>
 	);
 
