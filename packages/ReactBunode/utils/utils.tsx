@@ -1,9 +1,11 @@
 import { renderToString } from 'react-dom/server';
+import { resolve } from 'path';
 
 //@ts-ignore
 //@ts-ignore
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+import type { BuildOptions } from 'esbuild';
 
 export function sendNotFoundHTML() {
 	const string = renderToString(<APINoutFOundPage />);
@@ -49,3 +51,17 @@ export async function getPageComponents(outdir: string) {
 		: undefined;
 	return { Layout, Page, Loading };
 }
+
+export const esbuildConfig: BuildOptions = {
+	bundle: true,
+	packages: 'external',
+	format: 'esm',
+	allowOverwrite: true,
+	keepNames: true,
+	alias: {
+		react: resolve(process.cwd(), 'node_modules', 'react'),
+		'react-dom': resolve(process.cwd(), 'node_modules', 'react-dom')
+	},
+
+	jsxDev: true
+} as const;

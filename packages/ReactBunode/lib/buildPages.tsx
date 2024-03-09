@@ -1,11 +1,10 @@
 import { build as esbuild, type BuildOptions, type Plugin } from 'esbuild';
-import { readdirSync, statSync, existsSync } from 'fs';
+import { existsSync, readdirSync, statSync } from 'fs';
+import { JSDOM } from 'jsdom';
 import fs from 'node:fs/promises';
 import { join, resolve } from 'path';
-import { type FC } from 'react';
-import { JSDOM } from 'jsdom';
-import React from 'react';
 import * as prettier from 'prettier';
+import React, { type FC } from 'react';
 
 //@ts-ignore
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
@@ -15,6 +14,14 @@ import { renderToReadableStream } from 'react-dom/server';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { parseTwClassNames } from './routeHadler';
+
+const esbuildConfig: BuildOptions = {
+	bundle: true,
+	packages: 'external',
+	format: 'esm',
+	allowOverwrite: true,
+	keepNames: true
+} as const;
 
 export async function build(config: BuildOptions) {
 	try {
@@ -31,35 +38,38 @@ function getAppPath(baseDir: string) {
 	return resolve(dir, baseDir);
 }
 
+function getDestinationDir(baseDir: string) {
+	return join(dir, 'dist', baseDir == 'app' ? '' : join(...baseDir.split('/').slice(1)));
+}
+
 const filesToGenerateSSG = ['layout.tsx', 'layout.jsx', 'page.tsx', 'page.jsx'] as const;
 
 export async function buildForProduction(baseDir = 'app') {
 	const path = getAppPath(baseDir);
-	const files = await fs.readdir(path);
-	files.forEach(async (file) => {
-		const eachfileAbsolutePath = resolve(path, file);
-		const stat = await fs.stat(eachfileAbsolutePath);
-		if (stat.isDirectory()) {
-			return buildForProduction(join(baseDir, file));
-		}
-		if (
-			stat.isFile() &&
-			filesToGenerateSSG.includes(file.toLowerCase().trim() as (typeof filesToGenerateSSG)[number])
-		) {
-			const destinationDir = baseDir == 'app' ? '' : join(...baseDir.split('/').slice(1));
+	const files = readdirSync(path) as unknown as typeof filesToGenerateSSG;
+	await Promise.all(
+		files.map(async (file) => {
+			const eachfileAbsolutePath = resolve(path, file);
+			const stat = statSync(eachfileAbsolutePath);
+			if (stat.isDirectory()) return buildForProduction(join(baseDir, file));
 
-			build({
-				entryPoints: [eachfileAbsolutePath],
-				plugins: [generateStaticHTMLPlugin(), parseTwClassNames()],
-				outdir: join(dir, 'dist', destinationDir),
-				bundle: true,
-				packages: 'external',
-				format: 'esm',
-				allowOverwrite: true,
-				keepNames: true
-			});
-		}
-	});
+			if (stat.isFile() && filesToGenerateSSG.includes(file)) {
+				const destinationDir = getDestinationDir(baseDir);
+
+				await build({
+					entryPoints: [eachfileAbsolutePath],
+					plugins: [parseTwClassNames()],
+					outdir: destinationDir,
+					bundle: true,
+					packages: 'external',
+					format: 'esm',
+					allowOverwrite: true,
+					keepNames: true
+				});
+				console.log(`built ${eachfileAbsolutePath}`);
+			}
+		})
+	);
 }
 
 const directoryPath = join(process.cwd(), 'app');

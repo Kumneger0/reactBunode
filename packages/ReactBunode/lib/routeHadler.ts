@@ -1,3 +1,4 @@
+import { esbuildConfig } from './../utils/utils';
 import { readFile } from 'node:fs/promises';
 import { parse } from 'es-module-lexer';
 import { existsSync, readdirSync, statSync } from 'fs';
@@ -69,33 +70,20 @@ export async function routeHandler(req: HonoRequest) {
 
 	for (const { path, outdir } of pageComponents) {
 		const result = await build({
+			...esbuildConfig,
 			entryPoints: [path],
 			outdir: outdir,
 			plugins: [clientResolver, parseTwClassNames()],
-			packages: 'external',
-			format: 'esm',
-			bundle: true,
-			allowOverwrite: true,
-			keepNames: true,
-			alias: {
-				react: nodeResolve('../../node_modules/react')
-			}
+			packages: 'external'
 		});
 	}
 
 	const clientResult = await build({
+		...esbuildConfig,
 		entryPoints: [...clientEntryPoints],
 		plugins: [parseTwClassNames()],
-		format: 'esm',
 		outdir: nodeResolve(process.cwd(), 'build'),
-		bundle: true,
-		write: false,
-		alias: {
-			react: nodeResolve('../../node_modules/react')
-		},
-		allowOverwrite: true,
-		jsxDev: true,
-		keepNames: true
+		write: false
 	});
 
 	const clientComponentMap = await appendClientBuildReactMetaData(clientResult!);
@@ -194,13 +182,12 @@ async function appendClientBuildReactMetaData(clientResult: BuildResult) {
 
 export function parseTwClassNames(): Plugin {
 	return {
-		name: 'tailwind-inline-inline-style',
+		name: 'es-build-plugin-tw-classNames-to-inline-styles',
 		setup(build) {
 			build.onLoad({ filter: /\.(tsx|jsx|ts|js)$/ }, async ({ path }) => {
 				const contents = await readFile(path, 'utf-8');
 				const processedHtml = contents.replace(/className="([^"]+)"/g, (match, classes) => {
 					const inlineStyles = twj(classes);
-					console.log(inlineStyles, path);
 					return `style={${JSON.stringify({ ...inlineStyles })}}`;
 				});
 				return { contents: processedHtml, loader: 'tsx' };

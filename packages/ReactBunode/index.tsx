@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import React, { Suspense } from 'react';
 import { resolve } from 'path';
+import { readFileSync } from 'fs';
 //@ts-ignore
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 //@ts-ignore
@@ -15,7 +16,7 @@ import * as rscDomWebpackClient from 'react-server-dom-webpack/client';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { buildForProduction } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
-import { getPageComponents, sendNotFoundHTML } from './utils/utils.js';
+import { esbuildConfig, getPageComponents, sendNotFoundHTML } from './utils/utils.js';
 const app = new Hono();
 
 const handers = {
@@ -23,6 +24,7 @@ const handers = {
 	build: async () => {
 		console.log('building for production');
 		await buildForProduction();
+		console.log('production build complete');
 	},
 	start
 } as const;
@@ -110,13 +112,17 @@ function devMode() {
 				return React.use(data);
 			}
 
+			const clientBootstrapScript = readFileSync(resolve('./root-client.js'), {
+				encoding: 'utf-8'
+			});
+
 			let htmlStream = await renderToReadableStream(<Content />, {
-				bootstrapModules: ['/build/root-client.js'],
 				bootstrapScriptContent: `
                    window.__webpack_require__ = (id) => {
                       return import(id);
-         }
-      `
+				   }
+				   ${clientBootstrapScript}
+				   `
 			});
 
 			let response = htmlStream.pipeThrough(injectRSCPayload(s2));
@@ -134,17 +140,6 @@ function devMode() {
 	});
 	console.log('server started on port', 3000);
 }
-
-build({
-	entryPoints: [join(process.cwd(), 'node_modules', 'reactBunode', 'src/root-client.tsx')],
-	outdir: './build',
-	format: 'esm',
-	bundle: true,
-	jsxDev: true,
-	alias: {
-		react: resolve('../../node_modules/react')
-	}
-});
 
 function start() {
 	console.log('starting production server');
