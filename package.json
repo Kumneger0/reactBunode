@@ -13,10 +13,6 @@
     "examples/*"
   ],
   "dependencies": {
-    "dom-parser": "1.1.5",
-    "jsdom": "24.0.0",
-    "prettier": "3.2.5",
-    "react": "canary",
-    "react-dom": "canary"
+    "tw-to-css": "0.0.12"
   }
 }

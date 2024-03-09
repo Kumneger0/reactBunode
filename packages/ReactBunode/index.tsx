@@ -1,16 +1,16 @@
-#!/usr/bin/env bun
+#!/usr/bin/env -S bun --watch
 
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import React, { Suspense } from 'react';
-
+import { resolve } from 'path';
 //@ts-ignore
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 //@ts-ignore
 import { build } from 'esbuild';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { renderToReadableStream } from 'react-dom/server';
+import { renderToReadableStream } from 'react-dom/server.edge.js';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { buildForProduction } from './lib/buildPages.js';
@@ -18,9 +18,22 @@ import { routeHandler } from './lib/routeHadler.js';
 import { getPageComponents, sendNotFoundHTML } from './utils/utils.js';
 const app = new Hono();
 
-const isDev = process.argv?.[2].toLowerCase().trim() == 'dev';
-const isBuild = process.argv?.[2].toLowerCase().trim() == 'build';
-const isPrd = process.argv?.[2].toLowerCase().trim() == 'start';
+const handers = {
+	dev: devMode,
+	build: async () => {
+		console.log('building for production');
+		await buildForProduction();
+	},
+	start
+} as const;
+
+const command = process.argv?.[2].toLowerCase().trim() as keyof typeof handers;
+
+try {
+	handers[command]();
+} catch (err) {
+	console.error(err);
+}
 
 /**
  * Handles API endpoint routing.
@@ -123,10 +136,14 @@ function devMode() {
 }
 
 build({
-	entryPoints: [join(process.cwd(), 'node_modules', 'reactBunode', 'src/root-client.ts')],
+	entryPoints: [join(process.cwd(), 'node_modules', 'reactBunode', 'src/root-client.tsx')],
 	outdir: './build',
 	format: 'esm',
-	bundle: true
+	bundle: true,
+	jsxDev: true,
+	alias: {
+		react: resolve('../../node_modules/react')
+	}
 });
 
 function start() {
@@ -141,18 +158,5 @@ function start() {
 	});
 }
 
-isDev
-	? devMode()
-	: isBuild
-	? (async () => {
-			console.log('building for production');
-			await buildForProduction();
-	  })()
-	: isPrd
-	? start()
-	: (() => {
-			throw new Error('Invalid mode passed to script please choose dev, build or start');
-			process.exit(1);
-	  })();
-
-export default app;
+const devServer = command == 'dev' || command == 'start' ? app : undefined;
+export default devServer;

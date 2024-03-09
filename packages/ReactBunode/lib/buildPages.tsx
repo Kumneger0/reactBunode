@@ -14,6 +14,7 @@ import { build } from 'esbuild';
 import { renderToReadableStream } from 'react-dom/server';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
+import { parseTwClassNames } from './routeHadler';
 
 export async function build(config: BuildOptions) {
 	try {
@@ -49,7 +50,7 @@ export async function buildForProduction(baseDir = 'app') {
 
 			build({
 				entryPoints: [eachfileAbsolutePath],
-				plugins: [generateStaticHTMLPlugin()],
+				plugins: [generateStaticHTMLPlugin(), parseTwClassNames()],
 				outdir: join(dir, 'dist', destinationDir),
 				bundle: true,
 				packages: 'external',
@@ -69,6 +70,7 @@ let currentCompiledFileCount = 0;
 const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
 
 const bundleFileNames = ['layout.js', 'page.js'];
+
 function generateStaticHTMLPlugin(): Plugin {
 	return {
 		name: 'generate-static-html',
@@ -83,14 +85,14 @@ function generateStaticHTMLPlugin(): Plugin {
 						files.map(async (file) => {
 							const eachfileAbsolutePath = resolve(path, file);
 							const stat = await fs.stat(eachfileAbsolutePath);
-
 							if (stat.isDirectory()) {
 								if (dynamicRouteRegEx.test(file)) {
 									const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
 										staticPaths: Array<Record<string, any>>;
 									};
 									if (staticPaths?.length) {
-										staticPaths.map(async (prop) => {
+										staticPaths.map(async (prop, i) => {
+											console.log(i);
 											const html = await readHtmlFromStreamAndSaveToDisk(
 												join(path, file),
 												prop,
@@ -119,9 +121,8 @@ function generateStaticHTMLPlugin(): Plugin {
 				try {
 					currentCompiledFileCount += 1;
 					if (currentCompiledFileCount == fileCount) {
-						convertoHTML().then(() => {
-							console.log('done');
-						});
+						await convertoHTML();
+						console.log('done');
 					}
 				} catch (err) {
 					console.log(err);
@@ -236,34 +237,34 @@ async function addMetaData(html: string, path: string): Promise<string> {
 	const metadata = (await import(join(path, 'page.js'))).metadata as Metadata;
 	const dom = new JSDOM(html) as { window: { document: Document }; serialize: () => string };
 	if (!metadata) return html;
-	const title = dom.window.document.getElementsByTagName('title')[0];
-	if (title && metadata.title) {
-		title.textContent = metadata.title;
-	}
-	if (!title && metadata.title) {
-		dom.window.document.head.innerHTML += `<title>${metadata.title}</title>`;
-		dom.window.document.head.innerHTML += `<meta property="og:title" content="${metadata.title}" />`;
-	}
-	if (metadata.openGraph) {
-		Object.keys(metadata.openGraph).map((key) => {
-			if (Array.isArray(metadata.openGraph[key])) {
-				metadata.openGraph[key].forEach((v) => {
-					if (key == 'images') {
-						dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${v.url}" />`;
+	Object.keys(metadata).map((key) => {
+		if (key == 'title' && metadata[key]) {
+			if (dom.window.document.getElementsByTagName('title')[0])
+				dom.window.document.getElementsByTagName('title')[0].textContent = metadata[key]!;
+			dom.window.document.head.innerHTML += `<meta property="og:title" content="${metadata.title}" />`;
+			const title = dom.window.document.createElement('title');
+			title.textContent = metadata[key]!;
+			dom.window.document.head.appendChild(title);
+			return;
+		}
+		if (typeof metadata[key] == 'string') {
+			dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metadata[key]}" />`;
+			dom.window.document.head.innerHTML += `<meta name="${key}" content="${metadata[key]}" />`;
+		}
+	});
+	Object.keys(metadata?.openGraph ?? {})?.map((key) => {
+		if (key == 'images') {
+			const images = metadata.openGraph?.[key] as unknown as Array<Record<string, any>>;
+			if (images) {
+				images.map((image) => {
+					if (image.url) {
+						dom.window.document.head.innerHTML += `<meta property="og:image" content="${image.url}" />`;
 					}
 				});
 			}
-			if (typeof metadata.openGraph[key] == 'string') {
-				dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metadata.openGraph[key]}" />`;
-			}
-		});
-	}
-	if (metadata.descreption) {
-		dom.window.document.head.innerHTML += `<meta name="description" content="${metadata.descreption}" />`;
-		dom.window.document.head.innerHTML += `<meta property="og:description" content="${metadata.descreption}" />`;
-	}
-	const result = dom.serialize();
-	return result;
+		}
+	});
+	return dom.serialize();
 }
 
 export const metadata = {
@@ -272,6 +273,5 @@ export const metadata = {
 	openGraph: {
 		images: [{ url: `og image url` }]
 	}
-} as const;
-
-type Metadata = typeof metadata;
+};
+type Metadata = Partial<typeof metadata>;

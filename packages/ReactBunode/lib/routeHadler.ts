@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { parse } from 'es-module-lexer';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { writeFile } from 'fs/promises';
@@ -7,7 +8,8 @@ import { join, resolve as nodeResolve } from 'path';
 import React, { type FC } from 'react';
 import { clientResolver } from '../plugins/client-component-resolver';
 import { build } from './buildPages';
-import type { BuildResult } from 'esbuild';
+import type { BuildResult, Plugin } from 'esbuild';
+import { twi, twj } from 'tw-to-css';
 export const clientEntryPoints = new Set<string>();
 
 interface BasePageProps {
@@ -69,21 +71,28 @@ export async function routeHandler(req: HonoRequest) {
 		const result = await build({
 			entryPoints: [path],
 			outdir: outdir,
-			plugins: [clientResolver],
+			plugins: [clientResolver, parseTwClassNames()],
 			packages: 'external',
 			format: 'esm',
 			bundle: true,
 			allowOverwrite: true,
-			keepNames: true
+			keepNames: true,
+			alias: {
+				react: nodeResolve('../../node_modules/react')
+			}
 		});
 	}
 
 	const clientResult = await build({
 		entryPoints: [...clientEntryPoints],
+		plugins: [parseTwClassNames()],
 		format: 'esm',
 		outdir: nodeResolve(process.cwd(), 'build'),
 		bundle: true,
 		write: false,
+		alias: {
+			react: nodeResolve('../../node_modules/react')
+		},
 		allowOverwrite: true,
 		jsxDev: true,
 		keepNames: true
@@ -181,4 +190,21 @@ async function appendClientBuildReactMetaData(clientResult: BuildResult) {
 		await writeFile(path, newContents);
 	}
 	return clientComponentMap;
+}
+
+export function parseTwClassNames(): Plugin {
+	return {
+		name: 'tailwind-inline-inline-style',
+		setup(build) {
+			build.onLoad({ filter: /\.(tsx|jsx|ts|js)$/ }, async ({ path }) => {
+				const contents = await readFile(path, 'utf-8');
+				const processedHtml = contents.replace(/className="([^"]+)"/g, (match, classes) => {
+					const inlineStyles = twj(classes);
+					console.log(inlineStyles, path);
+					return `style={${JSON.stringify({ ...inlineStyles })}}`;
+				});
+				return { contents: processedHtml, loader: 'tsx' };
+			});
+		}
+	};
 }
