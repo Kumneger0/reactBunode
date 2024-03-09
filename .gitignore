@@ -14,7 +14,7 @@ build/
 app/
 .rscInBun/
 .turbo
-
+dist
 # Caches
 
 .cache

@@ -12,6 +12,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"checkJs": true,
 		"module": "ESNext",
+		"outDir": "dist",
 		"moduleResolution": "Node",
 		"target": "ESNext",
 		"jsx": "react-jsx",
@@ -20,5 +21,7 @@
 		"noImplicitAny": false,
 		"allowSyntheticDefaultImports": true,
 		"resolveJsonModule": true
-	}
+	},
+	"include": ["./"],
+	"exclude": ["node_modules"]
 }

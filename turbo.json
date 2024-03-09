@@ -1,10 +1,16 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
-    "build": {
-      "outputs": ["./dist"]
-    }
-  },
-
-  "globalDependencies": [".env", "tsconfig.json"]
+	"$schema": "https://turbo.build/schema.json",
+	"pipeline": {
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"build": {
+			"outputs": ["./dist/**"]
+		},
+		"start": {
+			"cache": false,
+			"persistent": true
+		}
+	}
 }
