@@ -1,4 +1,4 @@
-#!/usr/bin/env -S bun --watch
+#!/usr/bin/env bun
 
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
