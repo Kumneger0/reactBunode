@@ -13,7 +13,7 @@ import { join } from 'path';
 import { renderToReadableStream } from 'react-dom/server';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client';
 import { injectRSCPayload } from 'rsc-html-stream/server';
-import { buildForProduction } from './lib/buildPages.js';
+import { buildForProduction, bundle } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
 import { getPageComponents, sendNotFoundHTML } from './utils/utils.js';
 const app = new Hono();
@@ -23,6 +23,8 @@ const handers = {
 	build: async () => {
 		console.log('building for production');
 		const result = await buildForProduction();
+		console.log(result);
+		await bundle(result);
 		console.log('production build complete');
 	},
 	start

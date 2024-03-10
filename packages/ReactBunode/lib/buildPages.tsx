@@ -1,30 +1,19 @@
 import { build as esbuild, type BuildOptions, type Plugin } from 'esbuild';
-import { readdirSync, statSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
+import { JSDOM } from 'jsdom';
 import fs from 'node:fs/promises';
 import { join, resolve } from 'path';
-import { type FC } from 'react';
-import { JSDOM } from 'jsdom';
-import React from 'react';
 import * as prettier from 'prettier';
+import React, { type FC } from 'react';
 
-//@ts-ignore
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
-//@ts-ignore
+
 import { build } from 'esbuild';
 import { renderToReadableStream } from 'react-dom/server';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
-import { parseTwClassNames } from './routeHadler';
 import { formatConfig } from '../utils/utils';
-
-export async function build(config: BuildOptions) {
-	try {
-		const result = await esbuild(config);
-		return result;
-	} catch (err) {
-		console.log(err);
-	}
-}
+import { parseTwClassNames } from './routeHadler';
 
 const dir = resolve(process.cwd());
 
@@ -34,40 +23,44 @@ function getAppPath(baseDir: string) {
 
 const filesToGenerateSSG = ['layout.tsx', 'layout.jsx', 'page.tsx', 'page.jsx'] as const;
 
+const entryPoints = new Set<string>();
 export async function buildForProduction(baseDir = 'app') {
 	const path = getAppPath(baseDir);
 	const files = await fs.readdir(path);
-	files.forEach(async (file) => {
-		const eachfileAbsolutePath = resolve(path, file);
-		const stat = await fs.stat(eachfileAbsolutePath);
-		if (stat.isDirectory()) {
-			return buildForProduction(join(baseDir, file));
-		}
-		if (
-			stat.isFile() &&
-			filesToGenerateSSG.includes(file.toLowerCase().trim() as (typeof filesToGenerateSSG)[number])
-		) {
-			const destinationDir = baseDir == 'app' ? '' : join(...baseDir.split('/').slice(1));
+	await Promise.all(
+		files.map(async (file) => {
+			const eachfileAbsolutePath = resolve(path, file);
+			const stat = await fs.stat(eachfileAbsolutePath);
+			if (stat.isDirectory()) {
+				return await buildForProduction(join(baseDir, file));
+			}
+			if (
+				stat.isFile() &&
+				filesToGenerateSSG.includes(
+					file.toLowerCase().trim() as (typeof filesToGenerateSSG)[number]
+				)
+			) {
+				entryPoints.add(eachfileAbsolutePath);
+			}
+		})
+	);
+	return entryPoints;
+}
 
-			build({
-				entryPoints: [eachfileAbsolutePath],
-				plugins: [generateStaticHTMLPlugin(), parseTwClassNames()],
-				outdir: join(dir, 'dist', destinationDir),
-				bundle: true,
-				packages: 'external',
-				format: 'esm',
-				allowOverwrite: true,
-				keepNames: true
-			});
-		}
+export async function bundle(entryPoints: Set<string>) {
+	await build({
+		entryPoints: [...entryPoints],
+		plugins: [generateStaticHTMLPlugin(), parseTwClassNames()],
+		bundle: true,
+		outdir: join(process.cwd(), 'dist'),
+		packages: 'external',
+		format: 'esm',
+		allowOverwrite: true,
+		keepNames: true
 	});
 }
 
-const directoryPath = join(process.cwd(), 'app');
-const fileCount = countFilesInDirectory(directoryPath);
-
 const outdir = join(process.cwd(), 'dist');
-let currentCompiledFileCount = 0;
 const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
 
 const bundleFileNames = ['layout.js', 'page.js'];
@@ -77,6 +70,7 @@ function generateStaticHTMLPlugin(): Plugin {
 		name: 'generate-static-html',
 		setup(build) {
 			build.onEnd(async (result) => {
+				convertoHTML();
 				async function convertoHTML(baseDir = 'dist') {
 					if (baseDir == 'dist') readHtmlFromStreamAndSaveToDisk(outdir, {});
 
@@ -86,15 +80,6 @@ function generateStaticHTMLPlugin(): Plugin {
 						files.map(async (file) => await handleEachDir({ file, baseDir, convertoHTML, path }))
 					);
 				}
-				try {
-					currentCompiledFileCount += 1;
-					if (currentCompiledFileCount == fileCount) {
-						await convertoHTML();
-						console.log('done');
-					}
-				} catch (err) {
-					console.log(err);
-				}
 			});
 		}
 	};
@@ -103,32 +88,31 @@ function generateStaticHTMLPlugin(): Plugin {
 async function handleEachDir({ file, path, baseDir, convertoHTML }) {
 	const eachfileAbsolutePath = resolve(path, file);
 	const stat = await fs.stat(eachfileAbsolutePath);
-
 	if (!stat.isDirectory() && !bundleFileNames.includes(file)) return;
 
-	if (bundleFileNames.includes(file)) {
-		fs.rm(join(path, file));
-	}
+	if (dynamicRouteRegEx.test(file)) {
+		const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
+			staticPaths: Array<Record<string, any>>;
+		};
 
-	if (!dynamicRouteRegEx.test(file)) {
+		if (!staticPaths.length) return;
+
+		staticPaths.map(async (prop, i) => {
+			console.log(i);
+			const html = await readHtmlFromStreamAndSaveToDisk(join(path, file), prop, false);
+			if (!html) return;
+			const dir = join(path, Object.values(prop).join('/'));
+			if (existsSync(dir)) return;
+			await fs.mkdir(dir);
+			await fs.writeFile(join(dir, 'index.html'), html);
+		});
 		await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
 		return convertoHTML(join(baseDir, file));
 	}
-	const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
-		staticPaths: Array<Record<string, any>>;
-	};
-
-	if (!staticPaths.length) return;
-
-	staticPaths.map(async (prop, i) => {
-		console.log(i);
-		const html = await readHtmlFromStreamAndSaveToDisk(join(path, file), prop, false);
-		if (!html) return;
-		const dir = join(path, Object.values(prop).join('/'));
-		if (existsSync(dir)) return;
-		await fs.mkdir(dir);
-		await fs.writeFile(join(dir, 'index.html'), html);
-	});
+	if (stat.isDirectory()) {
+		await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
+		return convertoHTML(join(baseDir, file));
+	}
 	return;
 }
 
@@ -148,26 +132,6 @@ async function readHtmlFromStreamAndSaveToDisk(
 		if (!save) return html;
 		await fs.writeFile(join(path, 'index.html'), html);
 	}
-}
-
-function countFilesInDirectory(directoryPath: string) {
-	let count = 0;
-
-	const items = readdirSync(directoryPath);
-
-	items.forEach((item) => {
-		const fullPath = `${directoryPath}/${item}`;
-		if (
-			statSync(fullPath).isFile() &&
-			filesToGenerateSSG.includes(item.toLowerCase().trim() as (typeof filesToGenerateSSG)[number])
-		)
-			return count++;
-		if (statSync(fullPath).isDirectory()) {
-			count += countFilesInDirectory(fullPath);
-		}
-	});
-
-	return count;
 }
 
 interface BasePageProps {
