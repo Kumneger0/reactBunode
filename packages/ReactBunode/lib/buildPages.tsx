@@ -15,6 +15,7 @@ import { renderToReadableStream } from 'react-dom/server';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { parseTwClassNames } from './routeHadler';
+import { formatConfig } from '../utils/utils';
 
 export async function build(config: BuildOptions) {
 	try {
@@ -82,40 +83,7 @@ function generateStaticHTMLPlugin(): Plugin {
 					const path = getAppPath(baseDir);
 					const files = await fs.readdir(path);
 					await Promise.all(
-						files.map(async (file) => {
-							const eachfileAbsolutePath = resolve(path, file);
-							const stat = await fs.stat(eachfileAbsolutePath);
-							if (stat.isDirectory()) {
-								if (dynamicRouteRegEx.test(file)) {
-									const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
-										staticPaths: Array<Record<string, any>>;
-									};
-									if (staticPaths?.length) {
-										staticPaths.map(async (prop, i) => {
-											console.log(i);
-											const html = await readHtmlFromStreamAndSaveToDisk(
-												join(path, file),
-												prop,
-												false
-											);
-											if (html) {
-												const dir = join(path, Object.values(prop).join('/'));
-												if (!existsSync(dir)) {
-													await fs.mkdir(dir);
-													await fs.writeFile(join(dir, 'index.html'), html);
-												}
-											}
-										});
-										return;
-									}
-								}
-								await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
-								return convertoHTML(join(baseDir, file));
-							}
-							if (bundleFileNames.includes(file)) {
-								fs.rm(join(path, file));
-							}
-						})
+						files.map(async (file) => await handleEachDir({ file, baseDir, convertoHTML, path }))
 					);
 				}
 				try {
@@ -132,20 +100,37 @@ function generateStaticHTMLPlugin(): Plugin {
 	};
 }
 
-const formatConfig = {
-	parser: 'html',
-	useTabs: true,
-	singleQuote: true,
-	printWidth: 100,
-	overrides: [
-		{
-			options: {
-				useTabs: false,
-				tabWidth: 2
-			}
-		}
-	]
-};
+async function handleEachDir({ file, path, baseDir, convertoHTML }) {
+	const eachfileAbsolutePath = resolve(path, file);
+	const stat = await fs.stat(eachfileAbsolutePath);
+
+	if (!stat.isDirectory() && !bundleFileNames.includes(file)) return;
+
+	if (bundleFileNames.includes(file)) {
+		fs.rm(join(path, file));
+	}
+
+	if (!dynamicRouteRegEx.test(file)) {
+		await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
+		return convertoHTML(join(baseDir, file));
+	}
+	const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
+		staticPaths: Array<Record<string, any>>;
+	};
+
+	if (!staticPaths.length) return;
+
+	staticPaths.map(async (prop, i) => {
+		console.log(i);
+		const html = await readHtmlFromStreamAndSaveToDisk(join(path, file), prop, false);
+		if (!html) return;
+		const dir = join(path, Object.values(prop).join('/'));
+		if (existsSync(dir)) return;
+		await fs.mkdir(dir);
+		await fs.writeFile(join(dir, 'index.html'), html);
+	});
+	return;
+}
 
 async function readHtmlFromStreamAndSaveToDisk(
 	path: string,
