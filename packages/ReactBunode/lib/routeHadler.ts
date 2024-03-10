@@ -1,16 +1,16 @@
-import { esbuildConfig } from './../utils/utils';
-import { readFile } from 'node:fs/promises';
 import { parse } from 'es-module-lexer';
+import type { BuildResult, Plugin } from 'esbuild';
+import { build } from 'esbuild';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import type { HonoRequest } from 'hono';
+import { readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { join, resolve as nodeResolve } from 'path';
 import React, { type FC } from 'react';
+import { twj } from 'tw-to-css';
 import { clientResolver } from '../plugins/client-component-resolver';
-import { build } from './buildPages';
-import type { BuildResult, Plugin } from 'esbuild';
-import { twi, twj } from 'tw-to-css';
+import { esbuildConfig } from './../utils/utils';
 export const clientEntryPoints = new Set<string>();
 
 interface BasePageProps {
@@ -41,12 +41,18 @@ export async function routeHandler(req: HonoRequest) {
 
 	if (!isPathExists) {
 		dynamicRouteStatus = checkCurrentRouteDynamicStatus(url);
+		console.log(dynamicRouteStatus);
 	}
 
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
+
+	console.log(splitedPathName, 'splited path name');
+
 	const componentPath = dynamicRouteStatus?.isDynamic
 		? join(process.cwd(), 'app', splitedPathName, dynamicRouteStatus?.path)
 		: currentPath;
+
+	console.log(componentPath, 'component path');
 
 	const loadingFilePath = join(componentPath, 'loading.tsx');
 	const pagePath = join(componentPath, 'page.tsx');
@@ -74,7 +80,8 @@ export async function routeHandler(req: HonoRequest) {
 			entryPoints: [path],
 			outdir: outdir,
 			plugins: [clientResolver, parseTwClassNames()],
-			packages: 'external'
+			packages: 'external',
+			jsxFactory: 'jsx'
 		});
 	}
 
@@ -93,6 +100,8 @@ export async function routeHandler(req: HonoRequest) {
 	props[dynamicRouteStatus?.slug as keyof typeof props] = decodeURIComponent(
 		url.pathname.split('/').at(-1) as string
 	);
+
+	console.log('prop', props);
 
 	return {
 		props,
@@ -120,6 +129,9 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
 	const pathsToCheckDynicRoute = join(process.cwd(), 'app', splitedPathName);
+
+	console.log(pathsToCheckDynicRoute);
+
 	readdirSync(pathsToCheckDynicRoute).forEach(async (path) => {
 		const isDir = statSync(join(pathsToCheckDynicRoute, path)).isDirectory();
 		const isDynamic = isDir && dynamicRouteRegEx.test(path);
@@ -184,10 +196,11 @@ export function parseTwClassNames(): Plugin {
 	return {
 		name: 'es-build-plugin-tw-classNames-to-inline-styles',
 		setup(build) {
-			build.onLoad({ filter: /\.(tsx|jsx|ts|js)$/ }, async ({ path }) => {
+			build.onLoad({ filter: /\.(tsx|jsx)$/ }, async ({ path }) => {
 				const contents = await readFile(path, 'utf-8');
 				const processedHtml = contents.replace(/className="([^"]+)"/g, (match, classes) => {
 					const inlineStyles = twj(classes);
+
 					return `style={${JSON.stringify({ ...inlineStyles })}}`;
 				});
 				return { contents: processedHtml, loader: 'tsx' };

@@ -1,11 +1,11 @@
 import { renderToString } from 'react-dom/server';
-import { resolve } from 'path';
+import { type Config } from 'prettier';
+import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 
-//@ts-ignore
-//@ts-ignore
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
 import type { BuildOptions } from 'esbuild';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import React from 'react';
 
 export function sendNotFoundHTML() {
 	const string = renderToString(<APINoutFOundPage />);
@@ -43,7 +43,7 @@ function APINoutFOundPage() {
 }
 
 export async function getPageComponents(outdir: string) {
-	const content = readFileSync(join(outdir, 'page.js'), 'utf-8');
+	console.log('out dir', outdir);
 	const Layout = (await import(join(process.cwd(), 'build', 'layout.js'))).default;
 	const Page = (await import(join(outdir, 'page.js'))).default;
 	const Loading = existsSync(join(outdir, 'loading.js'))
@@ -54,14 +54,23 @@ export async function getPageComponents(outdir: string) {
 
 export const esbuildConfig: BuildOptions = {
 	bundle: true,
-	packages: 'external',
 	format: 'esm',
 	allowOverwrite: true,
 	keepNames: true,
-	alias: {
-		react: resolve(process.cwd(), 'node_modules', 'react'),
-		'react-dom': resolve(process.cwd(), 'node_modules', 'react-dom')
-	},
 
 	jsxDev: true
 } as const;
+
+export const formatConfig: Config = {
+	parser: 'html',
+	useTabs: true,
+	singleQuote: true,
+	printWidth: 100
+};
+
+let data: any;
+export function Content({ s1 }) {
+	data ??= rscDomWebpackClient.createFromReadableStream(s1);
+	//@ts-expect-error "Property 'use' does not exist on type 'typeof React'.ts(2339)"
+	return React.use(data);
+}

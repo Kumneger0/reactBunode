@@ -1,18 +1,19 @@
 {
-	"name": "reactBunode",
+	"name": "reactbunode",
 	"module": "index.ts",
 	"type": "module",
 	"devDependencies": {
 		"@types/bun": "^1.0.8"
 	},
 	"exports": {
-		".": "./index.tsx"
+		".": "./dist/index.js"
 	},
 	"scripts": {
-		"build": "bun --bun scripts/esbuild.ts"
+		"build": "bun --bun scripts/esbuild.ts",
+		"publish": "bun run build && npm publish"
 	},
 	"bin": {
-		"reactBunode": "./dist/index.js"
+		"reactBunode": "dist/index.js"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0",
@@ -32,5 +33,22 @@
 		"rsc-html-stream": "0.0.3",
 		"jsdom": "24.0.0",
 		"prettier": "3.2.5"
-	}
+	},
+	"version": "0.0.6",
+	"description": "simple static site generator using react",
+	"main": "dist/index.js",
+	"files": [
+		"dist/",
+		"README.md"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Kumneger0/reactBunode.git"
+	},
+	"author": "kumneger wondimu",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/Kumneger0/reactBunode/issues"
+	},
+	"homepage": "https://github.com/Kumneger0/reactBunode#readme"
 }

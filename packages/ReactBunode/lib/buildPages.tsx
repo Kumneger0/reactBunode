@@ -1,36 +1,17 @@
-import { build as esbuild, type BuildOptions, type Plugin } from 'esbuild';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { JSDOM } from 'jsdom';
 import fs from 'node:fs/promises';
 import { join, resolve } from 'path';
 import * as prettier from 'prettier';
-import React, { type FC } from 'react';
 
-//@ts-ignore
-import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
-//@ts-ignore
-import { build } from 'esbuild';
+import { build, type BuildOptions, type Plugin } from 'esbuild';
 import { renderToReadableStream } from 'react-dom/server';
-import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
+
+import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
+import type { Module } from '../types/types';
+import { Content, formatConfig } from '../utils/utils';
 import { parseTwClassNames } from './routeHadler';
-
-const esbuildConfig: BuildOptions = {
-	bundle: true,
-	packages: 'external',
-	format: 'esm',
-	allowOverwrite: true,
-	keepNames: true
-} as const;
-
-export async function build(config: BuildOptions) {
-	try {
-		const result = await esbuild(config);
-		return result;
-	} catch (err) {
-		console.log(err);
-	}
-}
 
 const dir = resolve(process.cwd());
 
@@ -38,12 +19,17 @@ function getAppPath(baseDir: string) {
 	return resolve(dir, baseDir);
 }
 
-function getDestinationDir(baseDir: string) {
-	return join(dir, 'dist', baseDir == 'app' ? '' : join(...baseDir.split('/').slice(1)));
-}
-
 const filesToGenerateSSG = ['layout.tsx', 'layout.jsx', 'page.tsx', 'page.jsx'] as const;
 
+const esbuildConfig: BuildOptions = {
+	bundle: true,
+	packages: 'external',
+	format: 'esm',
+	allowOverwrite: true,
+	keepNames: true
+};
+
+const entryPoints = new Set<string>();
 export async function buildForProduction(baseDir = 'app') {
 	const path = getAppPath(baseDir);
 	const files = readdirSync(path) as unknown as typeof filesToGenerateSSG;
@@ -51,117 +37,92 @@ export async function buildForProduction(baseDir = 'app') {
 		files.map(async (file) => {
 			const eachfileAbsolutePath = resolve(path, file);
 			const stat = statSync(eachfileAbsolutePath);
-			if (stat.isDirectory()) return buildForProduction(join(baseDir, file));
-
-			if (stat.isFile() && filesToGenerateSSG.includes(file)) {
-				const destinationDir = getDestinationDir(baseDir);
-
-				await build({
-					entryPoints: [eachfileAbsolutePath],
-					plugins: [parseTwClassNames()],
-					outdir: destinationDir,
-					bundle: true,
-					packages: 'external',
-					format: 'esm',
-					allowOverwrite: true,
-					keepNames: true
-				});
-				console.log(`built ${eachfileAbsolutePath}`);
-			}
+			if (stat.isDirectory()) return await buildForProduction(join(baseDir, file));
+			if (!stat.isFile() || !filesToGenerateSSG.includes(file)) return;
+			entryPoints.add(eachfileAbsolutePath);
 		})
 	);
+	return entryPoints;
 }
 
-const directoryPath = join(process.cwd(), 'app');
-const fileCount = countFilesInDirectory(directoryPath);
+export async function bundleApp(entryPoints: Set<string>) {
+	const result = await build({
+		entryPoints: [...entryPoints],
+		plugins: [parseTwClassNames(), esbuildReactToHtmlPlugin()],
+		outdir: join(process.cwd(), 'dist'),
+		...esbuildConfig
+	});
+	console.log('done');
+	return result;
+}
 
-const outdir = join(process.cwd(), 'dist');
-let currentCompiledFileCount = 0;
-const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
-
-const bundleFileNames = ['layout.js', 'page.js'];
-
-function generateStaticHTMLPlugin(): Plugin {
+function esbuildReactToHtmlPlugin(): Plugin {
 	return {
-		name: 'generate-static-html',
+		name: 'esbuildReactTohtmlPlugin',
 		setup(build) {
-			build.onEnd(async (result) => {
-				async function convertoHTML(baseDir = 'dist') {
-					if (baseDir == 'dist') readHtmlFromStreamAndSaveToDisk(outdir, {});
-
-					const path = getAppPath(baseDir);
-					const files = await fs.readdir(path);
-					await Promise.all(
-						files.map(async (file) => {
-							const eachfileAbsolutePath = resolve(path, file);
-							const stat = await fs.stat(eachfileAbsolutePath);
-							if (stat.isDirectory()) {
-								if (dynamicRouteRegEx.test(file)) {
-									const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
-										staticPaths: Array<Record<string, any>>;
-									};
-									if (staticPaths?.length) {
-										staticPaths.map(async (prop, i) => {
-											console.log(i);
-											const html = await readHtmlFromStreamAndSaveToDisk(
-												join(path, file),
-												prop,
-												false
-											);
-											if (html) {
-												const dir = join(path, Object.values(prop).join('/'));
-												if (!existsSync(dir)) {
-													await fs.mkdir(dir);
-													await fs.writeFile(join(dir, 'index.html'), html);
-												}
-											}
-										});
-										return;
-									}
-								}
-								await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
-								return convertoHTML(join(baseDir, file));
-							}
-							if (bundleFileNames.includes(file)) {
-								fs.rm(join(path, file));
-							}
-						})
-					);
-				}
-				try {
-					currentCompiledFileCount += 1;
-					if (currentCompiledFileCount == fileCount) {
-						await convertoHTML();
-						console.log('done');
-					}
-				} catch (err) {
-					console.log(err);
-				}
+			build.onEnd(() => {
+				generateStaticHTMLPlugin();
 			});
 		}
 	};
 }
 
-const formatConfig = {
-	parser: 'html',
-	useTabs: true,
-	singleQuote: true,
-	printWidth: 100,
-	overrides: [
-		{
-			options: {
-				useTabs: false,
-				tabWidth: 2
+const bundleFileNames = ['layout.js', 'page.js'];
+
+const outdir = join(process.cwd(), 'dist');
+const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
+
+export async function generateStaticHTMLPlugin(baseDir = 'dist') {
+	if (baseDir == 'dist') readHtmlFromStreamAndSaveToDisk(outdir, {});
+
+	const path = getAppPath(baseDir);
+	const files = readdirSync(path);
+	await Promise.all(
+		files.map(async (file) => {
+			const eachfileAbsolutePath = resolve(path, file);
+			const stat = await fs.stat(eachfileAbsolutePath);
+			if (stat.isDirectory()) {
+				await handleDirectory(file, path);
+				return generateStaticHTMLPlugin(join(baseDir, file));
 			}
-		}
-	]
-};
+			if (bundleFileNames.includes(file)) {
+				fs.rm(join(path, file));
+			}
+		})
+	);
+}
+
+async function handleDirectory(file: string, path: string) {
+	if (dynamicRouteRegEx.test(file)) {
+		await generateDynamicRoutes(path, file);
+	}
+	await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
+}
+
+async function generateDynamicRoutes(path: string, file: string) {
+	const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
+		staticPaths: Array<Record<string, any>>;
+	};
+	if (!staticPaths.length) return;
+
+	staticPaths.map(async (prop, i) => {
+		const html = await readHtmlFromStreamAndSaveToDisk(join(path, file), prop, false);
+		if (!html) return;
+		const dir = join(path, Object.values(prop).join('/'));
+		if (existsSync(dir)) return;
+		await fs.mkdir(dir);
+		await fs.writeFile(join(dir, 'index.html'), html);
+	});
+	return;
+}
 
 async function readHtmlFromStreamAndSaveToDisk(
 	path: string,
 	props: Record<string, any>,
 	save = true
 ) {
+	console.log(path, 'path');
+
 	const { default: Layout } = await import(join(outdir, 'layout.js'));
 	if (await fs.exists(join(path, 'page.js'))) {
 		const { default: Page } = await import(join(path, 'page.js'));
@@ -175,44 +136,14 @@ async function readHtmlFromStreamAndSaveToDisk(
 	}
 }
 
-function countFilesInDirectory(directoryPath: string) {
-	let count = 0;
-
-	const items = readdirSync(directoryPath);
-
-	items.forEach((item) => {
-		const fullPath = `${directoryPath}/${item}`;
-		if (
-			statSync(fullPath).isFile() &&
-			filesToGenerateSSG.includes(item.toLowerCase().trim() as (typeof filesToGenerateSSG)[number])
-		)
-			return count++;
-		if (statSync(fullPath).isDirectory()) {
-			count += countFilesInDirectory(fullPath);
-		}
-	});
-
-	return count;
-}
-
-interface BasePageProps {
-	searchParams?: URL['searchParams'];
-	children?: React.ReactNode;
-}
-
-type Module<T = {}> = {
-	default: FC<T & BasePageProps>;
-};
-
-async function generatePagesStatically({
-	Layout,
-	Page,
-	props
-}: {
+type GeneratePagesStaticallyProps = {
 	Layout: Module['default'];
 	Page: Module['default'];
 	props: any;
-}) {
+};
+async function generatePagesStatically({ Layout, Page, props }: GeneratePagesStaticallyProps) {
+	console.log(Page);
+
 	const stream = rscDomWebpack.renderToReadableStream(
 		<Layout>
 			<Page {...props} />
@@ -221,14 +152,7 @@ async function generatePagesStatically({
 
 	let [s1, s2] = stream.tee();
 
-	let data: any;
-	function Content() {
-		data ??= rscDomWebpackClient.createFromReadableStream(s1);
-		//@ts-expect-error
-		return React.use(data);
-	}
-
-	let htmlStream = await renderToReadableStream(<Content />, {});
+	let htmlStream = await renderToReadableStream(<Content s1={s1} />, {});
 
 	let response = htmlStream.pipeThrough(injectRSCPayload(s2));
 	let html = '';
@@ -240,6 +164,7 @@ async function generatePagesStatically({
 		if (!done) readHtml();
 	}
 	await readHtml();
+	console.log(html);
 	return html;
 }
 
@@ -265,13 +190,12 @@ async function addMetaData(html: string, path: string): Promise<string> {
 	Object.keys(metadata?.openGraph ?? {})?.map((key) => {
 		if (key == 'images') {
 			const images = metadata.openGraph?.[key] as unknown as Array<Record<string, any>>;
-			if (images) {
-				images.map((image) => {
-					if (image.url) {
-						dom.window.document.head.innerHTML += `<meta property="og:image" content="${image.url}" />`;
-					}
-				});
-			}
+			if (!images) return;
+			images.map((image) => {
+				if (image.url) {
+					dom.window.document.head.innerHTML += `<meta property="og:image" content="${image.url}" />`;
+				}
+			});
 		}
 	});
 	return dom.serialize();
