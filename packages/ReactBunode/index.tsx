@@ -23,7 +23,6 @@ const handers = {
 	build: async () => {
 		console.log('building for production');
 		const result = await buildForProduction();
-		console.log(result);
 		await bundle(result);
 		console.log('production build complete');
 	},
