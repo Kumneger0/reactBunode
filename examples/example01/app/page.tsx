@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Input from './input.tsx';
 import Button from './button.tsx';
+import Button2 from './about/Button2.tsx';
 
 export const metadata = {
 	title: 'this is string',
@@ -45,6 +46,7 @@ const Card = ({ title, id }) => (
 			<Button className="w-11/12 px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-greeen-400">
 				click me
 			</Button>
+			<Button2 />
 		</a>
 	</div>
 );

@@ -1,5 +1,3 @@
-'use client';
-
 function Button(
 	props: React.ButtonHTMLAttributes<HTMLButtonElement> & {
 		children: React.ReactNode;

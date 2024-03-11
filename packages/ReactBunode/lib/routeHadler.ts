@@ -7,20 +7,10 @@ import type { HonoRequest } from 'hono';
 import { readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { join, resolve as nodeResolve } from 'path';
-import React, { type FC } from 'react';
 import { twj } from 'tw-to-css';
 import { clientResolver } from '../plugins/client-component-resolver';
 import { esbuildConfig } from './../utils/utils';
 export const clientEntryPoints = new Set<string>();
-
-interface BasePageProps {
-	searchParams?: URL['searchParams'];
-	children?: React.ReactNode;
-}
-
-type Module<T = {}> = {
-	default: FC<T & BasePageProps>;
-};
 
 /**
  * Handles routing and building pages for the React app.
@@ -41,18 +31,13 @@ export async function routeHandler(req: HonoRequest) {
 
 	if (!isPathExists) {
 		dynamicRouteStatus = checkCurrentRouteDynamicStatus(url);
-		console.log(dynamicRouteStatus);
 	}
 
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
 
-	console.log(splitedPathName, 'splited path name');
-
 	const componentPath = dynamicRouteStatus?.isDynamic
 		? join(process.cwd(), 'app', splitedPathName, dynamicRouteStatus?.path)
 		: currentPath;
-
-	console.log(componentPath, 'component path');
 
 	const loadingFilePath = join(componentPath, 'loading.tsx');
 	const pagePath = join(componentPath, 'page.tsx');
@@ -101,8 +86,6 @@ export async function routeHandler(req: HonoRequest) {
 		url.pathname.split('/').at(-1) as string
 	);
 
-	console.log('prop', props);
-
 	return {
 		props,
 		clientComponentMap,
@@ -129,8 +112,6 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
 	const pathsToCheckDynicRoute = join(process.cwd(), 'app', splitedPathName);
-
-	console.log(pathsToCheckDynicRoute);
 
 	readdirSync(pathsToCheckDynicRoute).forEach(async (path) => {
 		const isDir = statSync(join(pathsToCheckDynicRoute, path)).isDirectory();
@@ -187,7 +168,9 @@ async function appendClientBuildReactMetaData(clientResult: BuildResult) {
           ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
         `;
 		}
+		console.log(clientComponentMap);
 		await writeFile(path, newContents);
+		console.log('here');
 	}
 	return clientComponentMap;
 }

@@ -86,10 +86,6 @@ function devMode() {
 		try {
 			const handlerResult = await routeHandler(c.req);
 
-			if (handlerResult instanceof Error) {
-				if (handlerResult.message == 'not found') return sendNotFoundHTML();
-				return new Response(handlerResult.message, { status: 500 });
-			}
 			const { props, clientComponentMap, outdir } = handlerResult;
 
 			const { Layout, Loading, Page } = await getPageComponents(outdir);
