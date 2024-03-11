@@ -14,6 +14,7 @@ import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { formatConfig } from '../utils/utils';
 import { parseTwClassNames } from './routeHadler';
+import type { Metadata, TJSDOM } from '../types/types';
 
 const dir = resolve(process.cwd());
 
@@ -52,7 +53,7 @@ export async function bundle(entryPoints: Set<string>) {
 		entryPoints: [...entryPoints],
 		plugins: [generateStaticHTMLPlugin(), parseTwClassNames()],
 		bundle: true,
-		outdir: join(process.cwd(), 'dist'),
+		outdir: join(process.cwd(), '.reactbunode', 'prd'),
 		packages: 'external',
 		format: 'esm',
 		allowOverwrite: true,
@@ -60,7 +61,7 @@ export async function bundle(entryPoints: Set<string>) {
 	});
 }
 
-const outdir = join(process.cwd(), 'dist');
+const outdir = join(process.cwd(), '.reactbunode', 'prd');
 const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
 
 const bundleFileNames = ['layout.js', 'page.js'];
@@ -71,8 +72,8 @@ function generateStaticHTMLPlugin(): Plugin {
 		setup(build) {
 			build.onEnd(async (result) => {
 				convertoHTML();
-				async function convertoHTML(baseDir = 'dist') {
-					if (baseDir == 'dist') readHtmlFromStreamAndSaveToDisk(outdir, {});
+				async function convertoHTML(baseDir = '.reactbunode/prd') {
+					if (baseDir == '.reactbunode/prd') readHtmlFromStreamAndSaveToDisk(outdir, {});
 
 					const path = getAppPath(baseDir);
 					const files = await fs.readdir(path);
@@ -91,14 +92,28 @@ async function handleEachDir({ file, path, baseDir, convertoHTML }) {
 	if (!stat.isDirectory() && !bundleFileNames.includes(file)) return;
 
 	if (dynamicRouteRegEx.test(file)) {
-		const { staticPaths } = (await import(join(path, file, 'page.js'))) as {
-			staticPaths: Array<Record<string, any>>;
+		const { getStaticPaths } = (await import(join(path, file, 'page.js'))) as {
+			getStaticPaths: (() => Promise<Array<Record<string, any>> | undefined>) | undefined;
 		};
 
-		if (!staticPaths.length) return;
+		if (!getStaticPaths)
+			throw new Error(`Please export async function named getStaticPaths from dynamic route
+		 no function named getStaticPaths found in ${join(path, file, 'page.js')}
+		
+			`);
 
-		staticPaths.map(async (prop, i) => {
-			console.log(i);
+		const staticPaths = await getStaticPaths();
+
+		if (!staticPaths)
+			throw new Error(`
+	       getStaticPaths function in ${join(path, file, 'page.js')} is not returning an array of objects, please check the documentation
+		`);
+
+		console.log(
+			`trying to generate ${staticPaths.length} pages in route ${join(path, file, 'page.js')}`
+		);
+
+		staticPaths?.map(async (prop, i) => {
 			const html = await readHtmlFromStreamAndSaveToDisk(join(path, file), prop, false);
 			if (!html) return;
 			const dir = join(path, Object.values(prop).join('/'));
@@ -106,8 +121,6 @@ async function handleEachDir({ file, path, baseDir, convertoHTML }) {
 			await fs.mkdir(dir);
 			await fs.writeFile(join(dir, 'index.html'), html);
 		});
-		await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
-		return convertoHTML(join(baseDir, file));
 	}
 	if (stat.isDirectory()) {
 		await readHtmlFromStreamAndSaveToDisk(join(path, file), {});
@@ -152,8 +165,6 @@ async function generatePagesStatically({
 	Page: Module['default'];
 	props: any;
 }) {
-	console.log(Page, props);
-
 	const stream = rscDomWebpack.renderToReadableStream(
 		<Layout>
 			<Page {...props} />
@@ -185,27 +196,33 @@ async function generatePagesStatically({
 }
 
 async function addMetaData(html: string, path: string): Promise<string> {
-	const metadata = (await import(join(path, 'page.js'))).metadata as Metadata;
-	const dom = new JSDOM(html) as { window: { document: Document }; serialize: () => string };
-	if (!metadata) return html;
-	Object.keys(metadata).map((key) => {
-		if (key == 'title' && metadata[key]) {
+	const { metadata, generateMetadata } = (await import(join(path, 'page.js'))) as {
+		metadata: Metadata | undefined;
+		generateMetadata: () => Promise<Metadata> | undefined;
+	};
+
+	const metataInfo = generateMetadata ? await generateMetadata() : metadata;
+
+	const dom = new JSDOM(html) as TJSDOM;
+	if (!metataInfo) return html;
+	Object.keys(metataInfo).map((key) => {
+		if (key == 'title' && metataInfo[key]) {
 			if (dom.window.document.getElementsByTagName('title')[0])
-				dom.window.document.getElementsByTagName('title')[0].textContent = metadata[key]!;
-			dom.window.document.head.innerHTML += `<meta property="og:title" content="${metadata.title}" />`;
+				dom.window.document.getElementsByTagName('title')[0].textContent = metataInfo[key]!;
+			dom.window.document.head.innerHTML += `<meta property="og:title" content="${metataInfo.title}" />`;
 			const title = dom.window.document.createElement('title');
-			title.textContent = metadata[key]!;
+			title.textContent = metataInfo[key]!;
 			dom.window.document.head.appendChild(title);
 			return;
 		}
-		if (typeof metadata[key] == 'string') {
-			dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metadata[key]}" />`;
-			dom.window.document.head.innerHTML += `<meta name="${key}" content="${metadata[key]}" />`;
+		if (typeof metataInfo[key] == 'string') {
+			dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metataInfo[key]}" />`;
+			dom.window.document.head.innerHTML += `<meta name="${key}" content="${metataInfo[key]}" />`;
 		}
 	});
-	Object.keys(metadata?.openGraph ?? {})?.map((key) => {
+	Object.keys(metataInfo?.openGraph ?? {})?.map((key) => {
 		if (key == 'images') {
-			const images = metadata.openGraph?.[key] as unknown as Array<Record<string, any>>;
+			const images = metataInfo.openGraph?.[key] as unknown as Array<Record<string, any>>;
 			if (images) {
 				images.map((image) => {
 					if (image.url) {
@@ -217,12 +234,3 @@ async function addMetaData(html: string, path: string): Promise<string> {
 	});
 	return dom.serialize();
 }
-
-export const metadata = {
-	title: 'this is string',
-	descreption: 'this is descreption',
-	openGraph: {
-		images: [{ url: `og image url` }]
-	}
-};
-type Metadata = Partial<typeof metadata>;

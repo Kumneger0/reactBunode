@@ -1,6 +1,11 @@
-export const metadata = {
-	title: 'some title',
-	description: 'some desciption'
+export const generateMetadata = async () => {
+	const fakeApiResponce = await new Promise((res) =>
+		setTimeout(() => res(Math.floor(Math.random() * 10000).toString()), 300)
+	);
+	return {
+		title: `some title ${fakeApiResponce}`,
+		description: `some desciption${fakeApiResponce}`
+	};
 };
 
 const fakeData = new Array(15)

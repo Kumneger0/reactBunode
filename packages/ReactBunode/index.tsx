@@ -24,7 +24,6 @@ const handers = {
 		console.log('building for production');
 		const result = await buildForProduction();
 		await bundle(result);
-		console.log('production build complete');
 	},
 	start
 } as const;
@@ -143,7 +142,7 @@ function start() {
 	console.log('starting production server');
 	app.use('/*', async (c) => {
 		const url = new URL(c.req.url).pathname;
-		return new Response(Bun.file(join(process.cwd(), 'dist', url, 'index.html')), {
+		return new Response(Bun.file(join(process.cwd(), '.reactbunode/prd', url, 'index.html')), {
 			headers: {
 				'Content-Type': 'text/html'
 			}

@@ -44,15 +44,15 @@ export async function routeHandler(req: HonoRequest) {
 	const rootLayoutPath = join(process.cwd(), 'app', 'layout.tsx');
 
 	const outdir = dynamicRouteStatus?.isDynamic
-		? join(process.cwd(), 'build', splitedPathName, dynamicRouteStatus.path)
-		: join(process.cwd(), 'build', url.pathname);
+		? join(process.cwd(), '.reactbunode', 'dev', splitedPathName, dynamicRouteStatus.path)
+		: join(process.cwd(), '.reactbunode', 'dev', url.pathname);
 
 	const unfillteredPagePaths = [
 		{ path: pagePath, type: 'page' as const, outdir },
 		{
 			path: rootLayoutPath,
 			type: 'layout' as const,
-			outdir: join(process.cwd(), 'build')
+			outdir: join(process.cwd(), '.reactbunode', 'dev')
 		},
 		{ path: loadingFilePath, type: 'loading' as const, outdir }
 	];
@@ -74,7 +74,7 @@ export async function routeHandler(req: HonoRequest) {
 		...esbuildConfig,
 		entryPoints: [...clientEntryPoints],
 		plugins: [parseTwClassNames()],
-		outdir: nodeResolve(process.cwd(), 'build'),
+		outdir: nodeResolve(process.cwd(), '.reactbunode', 'dev'),
 		write: false
 	});
 
@@ -130,7 +130,7 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 }
 
 async function isAppropriateFilesExist(url: URL) {
-	const isrootLayoutExists = await existsSync(join(process.cwd(), 'app', 'layout.tsx'));
+	const isrootLayoutExists = existsSync(join(process.cwd(), 'app', 'layout.tsx'));
 
 	if (!isrootLayoutExists) {
 		throw new Error('please define root layout in app dir');
