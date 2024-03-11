@@ -4,8 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "reactBunode dev",
-		"build": "reactBunode dev",
-		"test": "reactBunode dev",
+		"build": "reactBunode build",
+		"start": "reactBunode start",
 		"lint": "echo 'Add lint script here'"
 	},
 	"dependencies": {
