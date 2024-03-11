@@ -1,0 +1,16 @@
+{
+	"name": ".",
+	"module": "app/page.tsx",
+	"type": "module",
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"scripts": {
+		"dev": "reactBunode dev",
+		"build": "reactBunode build",
+		"start": "reactBunode start"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	}
+}

@@ -6,7 +6,12 @@
 			"persistent": true
 		},
 		"build": {
-			"outputs": ["./dist/**"]
+			"outputs": ["./dist/**"],
+			"cache": false,
+			"persistent": true
+		},
+		"publish": {
+			"cache": false
 		},
 		"start": {
 			"cache": false,

@@ -38,7 +38,7 @@ export async function buildRoutes(baseDir = 'app', outdir) {
 					: (() => {
 							const arrofPath = baseDir.split('/').slice(1);
 							return join(...arrofPath);
-					  })();
+						})();
 			watchFileChanges(eachfileAbsolutePath, destinationDir);
 			const result = await esbuild({
 				entryPoints: [path],

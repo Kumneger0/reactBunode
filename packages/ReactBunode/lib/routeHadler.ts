@@ -1,25 +1,16 @@
-import { readFile } from 'node:fs/promises';
 import { parse } from 'es-module-lexer';
+import type { BuildResult, Plugin } from 'esbuild';
+import { build } from 'esbuild';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import type { HonoRequest } from 'hono';
+import { readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { join, resolve as nodeResolve } from 'path';
-import React, { type FC } from 'react';
+import { twj } from 'tw-to-css';
 import { clientResolver } from '../plugins/client-component-resolver';
-import { build } from './buildPages';
-import type { BuildResult, Plugin } from 'esbuild';
-import { twi, twj } from 'tw-to-css';
+import { esbuildConfig } from './../utils/utils';
 export const clientEntryPoints = new Set<string>();
-
-interface BasePageProps {
-	searchParams?: URL['searchParams'];
-	children?: React.ReactNode;
-}
-
-type Module<T = {}> = {
-	default: FC<T & BasePageProps>;
-};
 
 /**
  * Handles routing and building pages for the React app.
@@ -43,6 +34,7 @@ export async function routeHandler(req: HonoRequest) {
 	}
 
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
+
 	const componentPath = dynamicRouteStatus?.isDynamic
 		? join(process.cwd(), 'app', splitedPathName, dynamicRouteStatus?.path)
 		: currentPath;
@@ -52,15 +44,15 @@ export async function routeHandler(req: HonoRequest) {
 	const rootLayoutPath = join(process.cwd(), 'app', 'layout.tsx');
 
 	const outdir = dynamicRouteStatus?.isDynamic
-		? join(process.cwd(), 'build', splitedPathName, dynamicRouteStatus.path)
-		: join(process.cwd(), 'build', url.pathname);
+		? join(process.cwd(), '.reactbunode', 'dev', splitedPathName, dynamicRouteStatus.path)
+		: join(process.cwd(), '.reactbunode', 'dev', url.pathname);
 
 	const unfillteredPagePaths = [
 		{ path: pagePath, type: 'page' as const, outdir },
 		{
 			path: rootLayoutPath,
 			type: 'layout' as const,
-			outdir: join(process.cwd(), 'build')
+			outdir: join(process.cwd(), '.reactbunode', 'dev')
 		},
 		{ path: loadingFilePath, type: 'loading' as const, outdir }
 	];
@@ -69,33 +61,21 @@ export async function routeHandler(req: HonoRequest) {
 
 	for (const { path, outdir } of pageComponents) {
 		const result = await build({
+			...esbuildConfig,
 			entryPoints: [path],
 			outdir: outdir,
 			plugins: [clientResolver, parseTwClassNames()],
 			packages: 'external',
-			format: 'esm',
-			bundle: true,
-			allowOverwrite: true,
-			keepNames: true,
-			alias: {
-				react: nodeResolve('../../node_modules/react')
-			}
+			jsxFactory: 'jsx'
 		});
 	}
 
 	const clientResult = await build({
+		...esbuildConfig,
 		entryPoints: [...clientEntryPoints],
 		plugins: [parseTwClassNames()],
-		format: 'esm',
-		outdir: nodeResolve(process.cwd(), 'build'),
-		bundle: true,
-		write: false,
-		alias: {
-			react: nodeResolve('../../node_modules/react')
-		},
-		allowOverwrite: true,
-		jsxDev: true,
-		keepNames: true
+		outdir: nodeResolve(process.cwd(), '.reactbunode', 'dev'),
+		write: false
 	});
 
 	const clientComponentMap = await appendClientBuildReactMetaData(clientResult!);
@@ -132,6 +112,7 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
 	const pathsToCheckDynicRoute = join(process.cwd(), 'app', splitedPathName);
+
 	readdirSync(pathsToCheckDynicRoute).forEach(async (path) => {
 		const isDir = statSync(join(pathsToCheckDynicRoute, path)).isDirectory();
 		const isDynamic = isDir && dynamicRouteRegEx.test(path);
@@ -149,7 +130,7 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 }
 
 async function isAppropriateFilesExist(url: URL) {
-	const isrootLayoutExists = await existsSync(join(process.cwd(), 'app', 'layout.tsx'));
+	const isrootLayoutExists = existsSync(join(process.cwd(), 'app', 'layout.tsx'));
 
 	if (!isrootLayoutExists) {
 		throw new Error('please define root layout in app dir');
@@ -187,20 +168,22 @@ async function appendClientBuildReactMetaData(clientResult: BuildResult) {
           ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
         `;
 		}
+		console.log(clientComponentMap);
 		await writeFile(path, newContents);
+		console.log('here');
 	}
 	return clientComponentMap;
 }
 
 export function parseTwClassNames(): Plugin {
 	return {
-		name: 'tailwind-inline-inline-style',
+		name: 'es-build-plugin-tw-classNames-to-inline-styles',
 		setup(build) {
-			build.onLoad({ filter: /\.(tsx|jsx|ts|js)$/ }, async ({ path }) => {
+			build.onLoad({ filter: /\.(tsx|jsx)$/ }, async ({ path }) => {
 				const contents = await readFile(path, 'utf-8');
 				const processedHtml = contents.replace(/className="([^"]+)"/g, (match, classes) => {
 					const inlineStyles = twj(classes);
-					console.log(inlineStyles, path);
+
 					return `style={${JSON.stringify({ ...inlineStyles })}}`;
 				});
 				return { contents: processedHtml, loader: 'tsx' };

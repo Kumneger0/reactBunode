@@ -10,10 +10,6 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-build/
-.rscInBun/
-.turbo
-dist
 # Caches
 
 .cache
@@ -51,7 +47,7 @@ coverage
 bower_components
 
 # node-waf configuration
-.reactbunode
+
 .lock-wscript
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)

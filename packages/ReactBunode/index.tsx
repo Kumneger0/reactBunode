@@ -1,19 +1,19 @@
 #!/usr/bin/env bun
 
+import { readFileSync } from 'fs';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import React, { Suspense } from 'react';
-import { resolve } from 'path';
 //@ts-ignore
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 //@ts-ignore
-import { build } from 'esbuild';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { renderToReadableStream } from 'react-dom/server.edge.js';
+
+import { renderToReadableStream } from 'react-dom/server';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client';
 import { injectRSCPayload } from 'rsc-html-stream/server';
-import { buildForProduction } from './lib/buildPages.js';
+import { buildForProduction, bundle } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
 import { getPageComponents, sendNotFoundHTML } from './utils/utils.js';
 const app = new Hono();
@@ -22,12 +22,13 @@ const handers = {
 	dev: devMode,
 	build: async () => {
 		console.log('building for production');
-		await buildForProduction();
+		const result = await buildForProduction();
+		await bundle(result);
 	},
 	start
 } as const;
 
-const command = process.argv?.[2].toLowerCase().trim() as keyof typeof handers;
+const command = process.argv?.[2] as keyof typeof handers;
 
 try {
 	handers[command]();
@@ -84,14 +85,9 @@ function devMode() {
 		try {
 			const handlerResult = await routeHandler(c.req);
 
-			if (handlerResult instanceof Error) {
-				if (handlerResult.message == 'not found') return sendNotFoundHTML();
-				return new Response(handlerResult.message, { status: 500 });
-			}
 			const { props, clientComponentMap, outdir } = handlerResult;
 
 			const { Layout, Loading, Page } = await getPageComponents(outdir);
-
 			const stream = rscDomWebpack.renderToReadableStream(
 				<Layout>
 					<Suspense fallback={Loading ? <Loading /> : 'load'}>
@@ -110,13 +106,19 @@ function devMode() {
 				return React.use(data);
 			}
 
+			const path = join(process.cwd(), 'node_modules', 'reactbunode', 'dist/root-client.js');
+
+			const clientBootstrapScript = readFileSync(path, {
+				encoding: 'utf-8'
+			});
+
 			let htmlStream = await renderToReadableStream(<Content />, {
-				bootstrapModules: ['/build/root-client.js'],
 				bootstrapScriptContent: `
                    window.__webpack_require__ = (id) => {
                       return import(id);
-         }
-      `
+				   }
+				   ${clientBootstrapScript}
+				   `
 			});
 
 			let response = htmlStream.pipeThrough(injectRSCPayload(s2));
@@ -126,6 +128,7 @@ function devMode() {
 				}
 			});
 		} catch (err) {
+			console.error(err);
 			if (err instanceof Error) {
 				if (err.message == 'not found') return sendNotFoundHTML();
 				return new Response(err.message, { status: 500 });
@@ -135,22 +138,11 @@ function devMode() {
 	console.log('server started on port', 3000);
 }
 
-build({
-	entryPoints: [join(process.cwd(), 'node_modules', 'reactBunode', 'src/root-client.tsx')],
-	outdir: './build',
-	format: 'esm',
-	bundle: true,
-	jsxDev: true,
-	alias: {
-		react: resolve('../../node_modules/react')
-	}
-});
-
 function start() {
 	console.log('starting production server');
 	app.use('/*', async (c) => {
 		const url = new URL(c.req.url).pathname;
-		return new Response(Bun.file(join(process.cwd(), 'dist', url, 'index.html')), {
+		return new Response(Bun.file(join(process.cwd(), '.reactbunode/prd', url, 'index.html')), {
 			headers: {
 				'Content-Type': 'text/html'
 			}

@@ -3,16 +3,26 @@
   "private": "true",
   "scripts": {
     "clean": "rm -rf node_modules packages/ReactBunode/node_modules packages/ReactBunode/node_modules bun.lockb packages/ReactBunode/bun.lockb ",
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "start": "turbo run start"
+    "dev": "turbo --no-cache run dev",
+    "build": "turbo --no-cache run build ",
+    "start": "turbo --no-cache run start ",
+    "publish": "turbo run publish --filter=reactbunode",
+    "buildLib": "turbo run build --filter=reactbunode"
   },
   "type": "module",
   "workspaces": [
     "packages/*",
     "examples/*"
   ],
+  "packageManager": "bun@1.0.26",
+  "module": "index.ts",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
   "dependencies": {
-    "tw-to-css": "0.0.12"
+    "eslint": "8.57.0"
   }
 }
