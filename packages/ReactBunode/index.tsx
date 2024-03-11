@@ -139,7 +139,7 @@ function devMode() {
 }
 
 function start() {
-	console.log('starting production server');
+	console.log('server started on port', 3000);
 	app.use('/*', async (c) => {
 		const url = new URL(c.req.url).pathname;
 		return new Response(Bun.file(join(process.cwd(), '.reactbunode/prd', url, 'index.html')), {

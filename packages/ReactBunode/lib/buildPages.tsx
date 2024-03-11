@@ -138,7 +138,7 @@ async function readHtmlFromStreamAndSaveToDisk(
 	if (await fs.exists(join(path, 'page.js'))) {
 		const { default: Page } = await import(join(path, 'page.js'));
 		const html = await prettier.format(
-			await addMetaData(await generatePagesStatically({ Layout, Page, props }), path),
+			await addMetaData(await generatePagesStatically({ Layout, Page, props }), path, props),
 			formatConfig
 		);
 
@@ -195,25 +195,29 @@ async function generatePagesStatically({
 	return html;
 }
 
-async function addMetaData(html: string, path: string): Promise<string> {
+async function addMetaData(
+	html: string,
+	path: string,
+	props: Record<string, string>
+): Promise<string> {
 	const { metadata, generateMetadata } = (await import(join(path, 'page.js'))) as {
 		metadata: Metadata | undefined;
-		generateMetadata: () => Promise<Metadata> | undefined;
+		generateMetadata: (props?: Record<string, string>) => Promise<Metadata> | undefined;
 	};
 
-	const metataInfo = generateMetadata ? await generateMetadata() : metadata;
+	const metataInfo = generateMetadata ? await generateMetadata(props) : metadata;
 
 	const dom = new JSDOM(html) as TJSDOM;
 	if (!metataInfo) return html;
 	Object.keys(metataInfo).map((key) => {
 		if (key == 'title' && metataInfo[key]) {
-			if (dom.window.document.getElementsByTagName('title')[0])
+			if (dom.window.document.getElementsByTagName('title')[0]) {
 				dom.window.document.getElementsByTagName('title')[0].textContent = metataInfo[key]!;
-			dom.window.document.head.innerHTML += `<meta property="og:title" content="${metataInfo.title}" />`;
+				return;
+			}
 			const title = dom.window.document.createElement('title');
 			title.textContent = metataInfo[key]!;
 			dom.window.document.head.appendChild(title);
-			return;
 		}
 		if (typeof metataInfo[key] == 'string') {
 			dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metataInfo[key]}" />`;

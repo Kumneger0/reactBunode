@@ -9,6 +9,19 @@ export type Products = {
 	image: string;
 };
 
+export const metadata = {
+	title: 'Demo E-commerse application',
+	description: 'This is a demo e-commerse application built with ReactBunny',
+	keywords: 'demo, e-commerse, application, reactbunny',
+	openGraph: {
+		images: [
+			{
+				url: 'https://plus.unsplash.com/premium_photo-1683798464819-d1376249293e?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+			}
+		]
+	}
+};
+
 async function Page() {
 	const products = (await fetch('https://fakestoreapi.com/products').then((res) => res.json())) as
 		| Array<Products>
