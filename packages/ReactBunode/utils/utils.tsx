@@ -3,12 +3,12 @@ import { type Config } from 'prettier';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 
 import type { BuildOptions } from 'esbuild';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import React from 'react';
 
 export function sendNotFoundHTML() {
-	const string = renderToString(<APINoutFOundPage />);
+	const string = renderToString(<NotFoundPage />);
 	return new Response(string, {
 		headers: {
 			'Content-Type': 'text/html'
@@ -16,7 +16,7 @@ export function sendNotFoundHTML() {
 	});
 }
 
-function APINoutFOundPage() {
+function NotFoundPage() {
 	return (
 		<html>
 			<body
@@ -44,6 +44,7 @@ function APINoutFOundPage() {
 
 export async function getPageComponents(outdir: string) {
 	const Layout = (await import(join(process.cwd(), '.reactbunode', 'dev', 'layout.js'))).default;
+
 	const Page = (await import(join(outdir, 'page.js'))).default;
 	const Loading = existsSync(join(outdir, 'loading.js'))
 		? (await import(join(outdir, 'loading.js'))).default

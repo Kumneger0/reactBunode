@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"build": "bun --bun scripts/esbuild.ts",
-		"publish": "npm publish"
+		"pub": "bun run build && npm publish"
 	},
 	"bin": {
 		"reactBunode": "dist/index.js"

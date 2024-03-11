@@ -3,19 +3,17 @@
 import { readFileSync } from 'fs';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 //@ts-ignore
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
-//@ts-ignore
 import { existsSync } from 'fs';
 import { join } from 'path';
 
 import { renderToReadableStream } from 'react-dom/server';
-import * as rscDomWebpackClient from 'react-server-dom-webpack/client';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { buildForProduction, bundle } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
-import { getPageComponents, sendNotFoundHTML } from './utils/utils.js';
+import { Content, getPageComponents, sendNotFoundHTML } from './utils/utils.js';
 const app = new Hono();
 
 const handers = {
@@ -88,23 +86,17 @@ function devMode() {
 			const { props, clientComponentMap, outdir } = handlerResult;
 
 			const { Layout, Loading, Page } = await getPageComponents(outdir);
+			console.log(readFileSync(join(process.cwd(), '.reactbunode', 'dev', 'layout.js'), 'utf-8'));
+
 			const stream = rscDomWebpack.renderToReadableStream(
 				<Layout>
-					<Suspense fallback={Loading ? <Loading /> : 'load'}>
+					<Suspense fallback={Loading ? <Loading /> : 'loading'}>
 						<Page {...props} />
 					</Suspense>
-				</Layout>,
-				clientComponentMap
+				</Layout>
 			);
 
 			let [s1, s2] = stream.tee();
-
-			let data: any;
-			function Content() {
-				data ??= rscDomWebpackClient.createFromReadableStream(s1);
-				//@ts-expect-error
-				return React.use(data);
-			}
 
 			const path = join(process.cwd(), 'node_modules', 'reactbunode', 'dist/root-client.js');
 
@@ -112,7 +104,7 @@ function devMode() {
 				encoding: 'utf-8'
 			});
 
-			let htmlStream = await renderToReadableStream(<Content />, {
+			let htmlStream = await renderToReadableStream(<Content s1={s1} />, {
 				bootstrapScriptContent: `
                    window.__webpack_require__ = (id) => {
                       return import(id);
