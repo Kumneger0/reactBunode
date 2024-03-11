@@ -1,0 +1,15 @@
+{
+	"name": "docs",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "reactBunode dev",
+		"build": "reactBunode dev",
+		"test": "reactBunode dev",
+		"lint": "echo 'Add lint script here'"
+	},
+	"dependencies": {
+		"eslint": "8.57.0",
+		"reactbunode": "link:reactbunode"
+	}
+}

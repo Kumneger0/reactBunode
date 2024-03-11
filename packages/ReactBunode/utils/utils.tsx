@@ -43,7 +43,6 @@ function APINoutFOundPage() {
 }
 
 export async function getPageComponents(outdir: string) {
-	console.log('out dir', outdir);
 	const Layout = (await import(join(process.cwd(), '.reactbunode', 'dev', 'layout.js'))).default;
 	const Page = (await import(join(outdir, 'page.js'))).default;
 	const Loading = existsSync(join(outdir, 'loading.js'))

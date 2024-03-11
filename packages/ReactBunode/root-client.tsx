@@ -4,5 +4,4 @@ import { rscStream } from 'rsc-html-stream/client';
 var stream = ReactServerDOMReader.createFromReadableStream(rscStream);
 stream.then((data) => {
 	ReactDOM.hydrateRoot(document, data);
-	console.log('page hydrated');
 });

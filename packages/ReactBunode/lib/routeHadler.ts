@@ -113,6 +113,8 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
 	const pathsToCheckDynicRoute = join(process.cwd(), 'app', splitedPathName);
 
+	if (!existsSync(pathsToCheckDynicRoute)) throw new Error('not found');
+
 	readdirSync(pathsToCheckDynicRoute).forEach(async (path) => {
 		const isDir = statSync(join(pathsToCheckDynicRoute, path)).isDirectory();
 		const isDynamic = isDir && dynamicRouteRegEx.test(path);
@@ -168,9 +170,7 @@ async function appendClientBuildReactMetaData(clientResult: BuildResult) {
           ${exp.ln}.$$typeof = Symbol.for("react.client.reference");
         `;
 		}
-		console.log(clientComponentMap);
 		await writeFile(path, newContents);
-		console.log('here');
 	}
 	return clientComponentMap;
 }
