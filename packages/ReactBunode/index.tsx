@@ -2,12 +2,18 @@
 
 import { readFileSync } from 'fs';
 import { Hono } from 'hono';
-import { serveStatic } from 'hono/bun';
+import serveStatic from 'serve-static';
+import finalhandler from 'finalhandler';
 import { Suspense } from 'react';
-//@ts-ignore
+import { serveStatic as honoServeStatic } from 'hono/bun';
+
+//@ts-expect-error
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import importFresh from 'import-fresh';
+
+import http from 'http';
 
 import { renderToReadableStream } from 'react-dom/server';
 import { injectRSCPayload } from 'rsc-html-stream/server';
@@ -48,7 +54,7 @@ function devMode() {
 
 		if (!existsSync(endpointFilePath)) return sendNotFoundHTML();
 
-		const module = (await import(endpointFilePath)) as {
+		const module = (await importFresh(endpointFilePath)) as {
 			[k: string]: (req: Request) => Response;
 		};
 
@@ -70,7 +76,7 @@ function devMode() {
 
 	app.use(
 		'/build/*',
-		serveStatic({
+		honoServeStatic({
 			root: './',
 			rewriteRequestPath: (path) => path.replace(/^\/build/, '/build')
 		})
@@ -86,7 +92,6 @@ function devMode() {
 			const { props, clientComponentMap, outdir } = handlerResult;
 
 			const { Layout, Loading, Page } = await getPageComponents(outdir);
-			console.log(readFileSync(join(process.cwd(), '.reactbunode', 'dev', 'layout.js'), 'utf-8'));
 
 			const stream = rscDomWebpack.renderToReadableStream(
 				<Layout>
@@ -132,15 +137,16 @@ function devMode() {
 
 function start() {
 	console.log('server started on port', 3000);
-	app.use('/*', async (c) => {
-		const url = new URL(c.req.url).pathname;
-		return new Response(Bun.file(join(process.cwd(), '.reactbunode/prd', url, 'index.html')), {
-			headers: {
-				'Content-Type': 'text/html'
-			}
-		});
+	var serve = serveStatic(join(process.cwd(), '.reactbunode', 'prd'), {
+		index: ['index.html', 'index.htm']
 	});
+
+	var server = http.createServer(function onRequest(req, res) {
+		serve(req, res, finalhandler(req, res));
+	});
+
+	server.listen(4000, () => console.log('server running on port 4000'));
 }
 
-const devServer = command == 'dev' || command == 'start' ? app : undefined;
+const devServer = command == 'dev' ? app : undefined;
 export default devServer;

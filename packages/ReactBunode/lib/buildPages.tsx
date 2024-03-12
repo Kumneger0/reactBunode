@@ -6,10 +6,15 @@ import { join, resolve } from 'path';
 import * as prettier from 'prettier';
 import React, { type FC } from 'react';
 
+//@ts-expect-error
+
 import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 
 import { build } from 'esbuild';
 import { renderToReadableStream } from 'react-dom/server';
+
+//@ts-expect-error
+
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { formatConfig } from '../utils/utils';
@@ -86,7 +91,13 @@ function generateStaticHTMLPlugin(): Plugin {
 	};
 }
 
-async function handleEachDir({ file, path, baseDir, convertoHTML }) {
+type HandleDirProp = {
+	file: string;
+	path: string;
+	baseDir: string;
+	convertoHTML: (path: string) => void;
+};
+async function handleEachDir({ file, path, baseDir, convertoHTML }: HandleDirProp) {
 	const eachfileAbsolutePath = resolve(path, file);
 	const stat = await fs.stat(eachfileAbsolutePath);
 	if (!stat.isDirectory() && !bundleFileNames.includes(file)) return;
@@ -106,12 +117,10 @@ async function handleEachDir({ file, path, baseDir, convertoHTML }) {
 
 		if (!staticPaths)
 			throw new Error(`
-	       getStaticPaths function in ${join(path, file, 'page.js')} is not returning an array of objects, please check the documentation
+	       getStaticPaths function in ${join(file, 'page.tsx')} route is not returning an array of objects, please check the documentation
 		`);
 
-		console.log(
-			`trying to generate ${staticPaths.length} pages in route ${join(path, file, 'page.js')}`
-		);
+		console.log(`trying to generate ${staticPaths.length} pages in route ${file}`);
 
 		staticPaths?.map(async (prop, i) => {
 			const html = await readHtmlFromStreamAndSaveToDisk(join(path, file), prop, false);
@@ -208,7 +217,17 @@ async function addMetaData(
 	const metataInfo = generateMetadata ? await generateMetadata(props) : metadata;
 
 	const dom = new JSDOM(html) as TJSDOM;
-	if (!metataInfo) return html;
+
+	if (existsSync(join(path, 'page.css'))) {
+		const link = dom.window.document.createElement('link');
+		link.rel = 'stylesheet';
+		link.href = './page.css';
+		link.type = 'text/css';
+
+		dom.window.document.head.appendChild(link);
+	}
+
+	if (!metataInfo) return dom.serialize();
 	Object.keys(metataInfo).map((key) => {
 		if (key == 'title' && metataInfo[key]) {
 			if (dom.window.document.getElementsByTagName('title')[0]) {
@@ -227,13 +246,12 @@ async function addMetaData(
 	Object.keys(metataInfo?.openGraph ?? {})?.map((key) => {
 		if (key == 'images') {
 			const images = metataInfo.openGraph?.[key] as unknown as Array<Record<string, any>>;
-			if (images) {
-				images.map((image) => {
-					if (image.url) {
-						dom.window.document.head.innerHTML += `<meta property="og:image" content="${image.url}" />`;
-					}
-				});
-			}
+			if (!images) return;
+			images.map((image) => {
+				if (image.url) {
+					dom.window.document.head.innerHTML += `<meta property="og:image" content="${image.url}" />`;
+				}
+			});
 		}
 	});
 	return dom.serialize();

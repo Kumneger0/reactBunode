@@ -1,4 +1,6 @@
 import React from 'react';
+import './global.css';
+import './globals2.css';
 
 export const metadata = {
 	title: 'Demo E-commerse application',

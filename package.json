@@ -1,18 +1,24 @@
 {
-	"name": "workspaces",
-	"private": "true",
-	"scripts": {
-		"clean": "rm -rf node_modules packages/ReactBunode/node_modules packages/ReactBunode/node_modules bun.lockb packages/ReactBunode/bun.lockb ",
-		"dev": "turbo --no-cache run dev",
-		"build": "turbo --no-cache run build ",
-		"start": "turbo --no-cache run start ",
-		"publish": "turbo run publish --filter=reactbunode",
-		"buildLib": "turbo run build --filter=reactbunode"
-	},
-	"type": "module",
-	"workspaces": [
-		"packages/*",
-		"examples/*"
-	],
-	"packageManager": "bun@1.0.26"
+  "name": "workspaces",
+  "private": "true",
+  "scripts": {
+    "clean": "rm -rf node_modules packages/ReactBunode/node_modules packages/ReactBunode/node_modules bun.lockb packages/ReactBunode/bun.lockb ",
+    "dev": "turbo --no-cache run dev",
+    "build": "turbo --no-cache run build ",
+    "start": "turbo --no-cache run start ",
+    "publish": "turbo run publish --filter=reactbunode",
+    "buildLib": "turbo run build --filter=reactbunode"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "packageManager": "bun@1.0.26",
+  "dependencies": {
+    "serve-static": "1.15.0"
+  },
+  "devDependencies": {
+    "@types/serve-static": "1.15.5"
+  }
 }

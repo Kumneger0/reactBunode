@@ -1,9 +1,11 @@
-import { renderToString } from 'react-dom/server';
 import { type Config } from 'prettier';
+import { renderToString } from 'react-dom/server';
+
+//@ts-expect-error
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 
 import type { BuildOptions } from 'esbuild';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import React from 'react';
 
@@ -43,13 +45,22 @@ function NotFoundPage() {
 }
 
 export async function getPageComponents(outdir: string) {
-	const Layout = (await import(join(process.cwd(), '.reactbunode', 'dev', 'layout.js'))).default;
+	const layoutPath = join(process.cwd(), '.reactbunode', 'dev', 'layout.js');
+	const pagePath = join(outdir, 'page.js');
+	const loadingPath = join(outdir, 'loading.js');
 
-	const Page = (await import(join(outdir, 'page.js'))).default;
-	const Loading = existsSync(join(outdir, 'loading.js'))
-		? (await import(join(outdir, 'loading.js'))).default
-		: undefined;
-	return { Layout, Page, Loading };
+	const pathsToDeleteCache = [pagePath, layoutPath, loadingPath].filter((path) => existsSync(path));
+
+	deleteDynamicImportCache(pathsToDeleteCache);
+
+	let loading;
+	if (existsSync(loadingPath)) {
+		loading = (await import(loadingPath)).default;
+	}
+
+	const { default: Layout } = await import(layoutPath);
+	const Page = (await import(pagePath)).default;
+	return { Layout, Page, Loading: loading };
 }
 
 export const esbuildConfig: BuildOptions = {
@@ -69,8 +80,14 @@ export const formatConfig: Config = {
 };
 
 let data: any;
-export function Content({ s1 }) {
+export function Content({ s1 }: { s1: ReadableStream }) {
 	data ??= rscDomWebpackClient.createFromReadableStream(s1);
 	//@ts-expect-error "Property 'use' does not exist on type 'typeof React'.ts(2339)"
 	return React.use(data);
+}
+
+export function deleteDynamicImportCache(paths: Array<string>) {
+	for (const path of paths) {
+		delete require.cache[require.resolve(path)];
+	}
 }

@@ -1,6 +1,9 @@
 {
 	"compilerOptions": {
-		"lib": ["ESNext", "DOM"],
+		"lib": [
+			"ESNext",
+			"DOM"
+		],
 		"moduleDetection": "force",
 		"allowJs": true,
 		/* Bundler mode */
@@ -17,7 +20,7 @@
 		"jsx": "react-jsx",
 		"noEmit": true,
 		"strict": true,
-		"noImplicitAny": false,
+		"noImplicitAny": true,
 		"allowSyntheticDefaultImports": true,
 		"resolveJsonModule": true
 	}

@@ -1,11 +1,12 @@
 import React from 'react';
 
+import './global.css';
+
 const style: React.CSSProperties = {
 	fontFamily: '"Open Sans", sans-serif',
 	fontOpticalSizing: 'auto',
-	fontWeight: 400, // Replace <weight> with the actual weight value you want to use
-	fontStyle: 'normal',
-	fontVariationSettings: '"wdth" 100'
+	fontWeight: 400,
+	fontStyle: 'normal'
 };
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 				/>
 			</head>
 			<body className="mx-auto text-white bg-gray-800 m-0 p-0 h-screen overflow-x-hidden">
-				<div className="max-w-6xl mx-auto">{children}</div>
+				<div className="max-w-7xl mx-auto">{children}</div>
 			</body>
 		</html>
 	);
