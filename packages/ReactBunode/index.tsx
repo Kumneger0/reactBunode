@@ -12,14 +12,45 @@ import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import importFresh from 'import-fresh';
-
 import http from 'http';
-
+import WebSocket, { WebSocketServer } from 'ws';
 import { renderToReadableStream } from 'react-dom/server';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { buildForProduction, bundle } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
 import { Content, getPageComponents, sendNotFoundHTML } from './utils/utils.js';
+import Watchpack from 'watchpack';
+
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on('connection', function connection(ws) {
+	var wp = new Watchpack({
+		aggregateTimeout: 1000,
+		poll: true,
+		followSymlinks: true
+	});
+
+	wp.watch({
+		directories: [join(process.cwd(), 'app')]
+	});
+
+	wp.on('change', (filePath, mtime) => {
+		console.log(`File ${filePath} has changed`);
+		ws.send('reload');
+	});
+
+	ws.on('error', console.error);
+	ws.on('message', function message(data) {
+		console.log('received: %s', data);
+	});
+
+	ws.on('close', (code, reason) => {
+		wp.close();
+	});
+
+	ws.send('something');
+});
+
 const app = new Hono();
 
 const handers = {
