@@ -12,6 +12,7 @@ export type Module<T = {}> = {
 export type Metadata = {
 	title?: string | undefined;
 	description?: string | undefined;
+	author: string;
 	openGraph?:
 		| {
 				images: {

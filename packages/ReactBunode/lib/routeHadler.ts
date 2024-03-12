@@ -1,5 +1,5 @@
 import { parse } from 'es-module-lexer';
-import type { BuildResult, Plugin } from 'esbuild';
+import { context, type BuildResult, type Plugin } from 'esbuild';
 import { build } from 'esbuild';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { writeFile } from 'fs/promises';
@@ -57,18 +57,21 @@ export async function routeHandler(req: HonoRequest) {
 		{ path: loadingFilePath, type: 'loading' as const, outdir }
 	];
 
-	const pageComponents = unfillteredPagePaths.filter(({ path }) => existsSync(path));
+	const pageComponents = unfillteredPagePaths
+		.filter(({ path }) => existsSync(path))
+		.map(({ path }) => path);
 
-	for (const { path, outdir } of pageComponents) {
-		const result = await build({
-			...esbuildConfig,
-			entryPoints: [path],
-			outdir: outdir,
-			plugins: [clientResolver, parseTwClassNames()],
-			packages: 'external',
-			jsxFactory: 'jsx'
-		});
-	}
+	// for (const { path, outdir } of pageComponents) {
+	const result = await context({
+		...esbuildConfig,
+		entryPoints: [...pageComponents],
+		outdir: join(process.cwd(), '.reactbunode', 'dev'),
+		plugins: [clientResolver, parseTwClassNames()],
+		packages: 'external',
+		jsxFactory: 'jsx'
+	});
+	await result.watch();
+	// }
 
 	const clientResult = await build({
 		...esbuildConfig,
@@ -150,7 +153,7 @@ async function isAppropriateFilesExist(url: URL) {
  * render function.
  */
 async function appendClientBuildReactMetaData(clientResult: BuildResult) {
-	const clientComponentMap = {};
+	const clientComponentMap: Record<string, any> = {};
 
 	for (const { path, text } of clientResult?.outputFiles!) {
 		const [, exports] = parse(text);

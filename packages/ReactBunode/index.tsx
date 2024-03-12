@@ -1,21 +1,50 @@
 #!/usr/bin/env bun
 
+import finalhandler from 'finalhandler';
 import { readFileSync } from 'fs';
 import { Hono } from 'hono';
-import { serveStatic } from 'hono/bun';
-import React, { Suspense } from 'react';
-//@ts-ignore
-import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
-//@ts-ignore
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { serveStatic as honoServeStatic } from 'hono/bun';
+import { Suspense } from 'react';
+import serveStatic from 'serve-static';
 
+import { existsSync } from 'fs';
+import http from 'http';
+import importFresh from 'import-fresh';
+import { join } from 'path';
 import { renderToReadableStream } from 'react-dom/server';
-import * as rscDomWebpackClient from 'react-server-dom-webpack/client';
+//@ts-expect-error "Could not find a declaration file for module 'react-server-dom-webpack/server.edge.js"
+import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
+import { twj } from 'tw-to-css';
+import Watchpack from 'watchpack';
+import { WebSocketServer } from 'ws';
 import { buildForProduction, bundle } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
-import { getPageComponents, sendNotFoundHTML } from './utils/utils.js';
+import { Content, getPageComponents, sendNotFoundHTML } from './utils/utils.js';
+
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on('connection', function connection(ws) {
+	var wp = new Watchpack({
+		aggregateTimeout: 500,
+		poll: true,
+		followSymlinks: true
+	});
+
+	wp.watch({
+		directories: [join(process.cwd(), 'app')]
+	});
+
+	wp.on('change', (filePath, mtime) => {
+		console.log(`${filePath} changed`);
+		ws.send('reload');
+	});
+
+	ws.on('error', console.error);
+
+	ws.on('close', (code, reason) => wp.close());
+});
+
 const app = new Hono();
 
 const handers = {
@@ -50,7 +79,7 @@ function devMode() {
 
 		if (!existsSync(endpointFilePath)) return sendNotFoundHTML();
 
-		const module = (await import(endpointFilePath)) as {
+		const module = (await importFresh(endpointFilePath)) as {
 			[k: string]: (req: Request) => Response;
 		};
 
@@ -72,7 +101,7 @@ function devMode() {
 
 	app.use(
 		'/build/*',
-		serveStatic({
+		honoServeStatic({
 			root: './',
 			rewriteRequestPath: (path) => path.replace(/^\/build/, '/build')
 		})
@@ -88,9 +117,10 @@ function devMode() {
 			const { props, clientComponentMap, outdir } = handlerResult;
 
 			const { Layout, Loading, Page } = await getPageComponents(outdir);
+
 			const stream = rscDomWebpack.renderToReadableStream(
 				<Layout>
-					<Suspense fallback={Loading ? <Loading /> : 'load'}>
+					<Suspense fallback={Loading ? <Loading /> : 'loading'}>
 						<Page {...props} />
 					</Suspense>
 				</Layout>,
@@ -99,20 +129,13 @@ function devMode() {
 
 			let [s1, s2] = stream.tee();
 
-			let data: any;
-			function Content() {
-				data ??= rscDomWebpackClient.createFromReadableStream(s1);
-				//@ts-expect-error
-				return React.use(data);
-			}
-
 			const path = join(process.cwd(), 'node_modules', 'reactbunode', 'dist/root-client.js');
 
 			const clientBootstrapScript = readFileSync(path, {
 				encoding: 'utf-8'
 			});
 
-			let htmlStream = await renderToReadableStream(<Content />, {
+			let htmlStream = await renderToReadableStream(<Content s1={s1} />, {
 				bootstrapScriptContent: `
                    window.__webpack_require__ = (id) => {
                       return import(id);
@@ -139,16 +162,16 @@ function devMode() {
 }
 
 function start() {
-	console.log('server started on port', 3000);
-	app.use('/*', async (c) => {
-		const url = new URL(c.req.url).pathname;
-		return new Response(Bun.file(join(process.cwd(), '.reactbunode/prd', url, 'index.html')), {
-			headers: {
-				'Content-Type': 'text/html'
-			}
-		});
+	var serve = serveStatic(join(process.cwd(), '.reactbunode', 'prd'), {
+		index: ['index.html', 'index.htm']
 	});
+
+	var server = http.createServer(function onRequest(req, res) {
+		serve(req, res, finalhandler(req, res));
+	});
+
+	server.listen(4000, () => console.log('server running on port 4000'));
 }
 
-const devServer = command == 'dev' || command == 'start' ? app : undefined;
+const devServer = command == 'dev' ? app : undefined;
 export default devServer;
