@@ -11,9 +11,7 @@ stream.then((data) => {
 
 const ws = new WebSocket('ws://localhost:8080');
 
-ws.addEventListener('open', (event) => {
-	ws.send('Hello Server!');
-});
+ws.addEventListener('open', (event) => {});
 
 ws.addEventListener('message', (event) => {
 	console.log(event.data);

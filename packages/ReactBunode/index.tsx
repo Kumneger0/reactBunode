@@ -1,31 +1,32 @@
 #!/usr/bin/env bun
 
+import finalhandler from 'finalhandler';
 import { readFileSync } from 'fs';
 import { Hono } from 'hono';
-import serveStatic from 'serve-static';
-import finalhandler from 'finalhandler';
-import { Suspense } from 'react';
 import { serveStatic as honoServeStatic } from 'hono/bun';
+import { Suspense } from 'react';
+import serveStatic from 'serve-static';
 
-//@ts-expect-error
-import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 import { existsSync } from 'fs';
-import { join } from 'path';
-import importFresh from 'import-fresh';
 import http from 'http';
-import WebSocket, { WebSocketServer } from 'ws';
+import importFresh from 'import-fresh';
+import { join } from 'path';
 import { renderToReadableStream } from 'react-dom/server';
+//@ts-expect-error "Could not find a declaration file for module 'react-server-dom-webpack/server.edge.js"
+import * as rscDomWebpack from 'react-server-dom-webpack/server.edge.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
+import { twj } from 'tw-to-css';
+import Watchpack from 'watchpack';
+import { WebSocketServer } from 'ws';
 import { buildForProduction, bundle } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
 import { Content, getPageComponents, sendNotFoundHTML } from './utils/utils.js';
-import Watchpack from 'watchpack';
 
 const wss = new WebSocketServer({ port: 8080 });
 
 wss.on('connection', function connection(ws) {
 	var wp = new Watchpack({
-		aggregateTimeout: 1000,
+		aggregateTimeout: 500,
 		poll: true,
 		followSymlinks: true
 	});
@@ -35,20 +36,13 @@ wss.on('connection', function connection(ws) {
 	});
 
 	wp.on('change', (filePath, mtime) => {
-		console.log(`File ${filePath} has changed`);
+		console.log(`${filePath} changed`);
 		ws.send('reload');
 	});
 
 	ws.on('error', console.error);
-	ws.on('message', function message(data) {
-		console.log('received: %s', data);
-	});
 
-	ws.on('close', (code, reason) => {
-		wp.close();
-	});
-
-	ws.send('something');
+	ws.on('close', (code, reason) => wp.close());
 });
 
 const app = new Hono();
@@ -129,7 +123,8 @@ function devMode() {
 					<Suspense fallback={Loading ? <Loading /> : 'loading'}>
 						<Page {...props} />
 					</Suspense>
-				</Layout>
+				</Layout>,
+				clientComponentMap
 			);
 
 			let [s1, s2] = stream.tee();
@@ -167,7 +162,6 @@ function devMode() {
 }
 
 function start() {
-	console.log('server started on port', 3000);
 	var serve = serveStatic(join(process.cwd(), '.reactbunode', 'prd'), {
 		index: ['index.html', 'index.htm']
 	});

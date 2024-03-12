@@ -1,6 +1,4 @@
 import React from 'react';
-import './global.css';
-import './globals2.css';
 
 export const metadata = {
 	title: 'Demo E-commerse application',
@@ -16,9 +14,9 @@ async function Page() {
 		<>
 			<h1 className="w-full text-center capitalize">docs for ReactBunode</h1>
 			<div className="flex  relative flex-wrap justify-center gap-5">
-				<div className="w-1/3 flex items-center flex-col gap-1 top-3 max-h-[600px] sticky">
+				<div className="w-1/3  flex items-center flex-col gap-1 top-3 max-h-[600px] sticky">
 					<div className="font-bold  text-lg">
-						<a className="text-white text-decoration-none" href="#get-started">
+						<a className="text-white  text-decoration-none" href="#get-started">
 							Get Started
 						</a>
 					</div>

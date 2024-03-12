@@ -31,6 +31,7 @@
     "@types/react-dom": "^18.2.19",
     "@types/watchpack": "2.4.4",
     "es-module-lexer": "^1.4.1",
+    "esbuild-envfile-plugin": "1.0.5",
     "finalhandler": "1.2.0",
     "hono": "^4.0.6",
     "import-fresh": "3.3.0",

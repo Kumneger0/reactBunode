@@ -88,6 +88,7 @@ export function Content({ s1 }: { s1: ReadableStream }) {
 
 export function deleteDynamicImportCache(paths: Array<string>) {
 	for (const path of paths) {
+		console.log('clearing cahce for page', path);
 		delete require.cache[require.resolve(path)];
 	}
 }
