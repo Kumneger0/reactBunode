@@ -1,6 +1,7 @@
 import React from 'react';
 
 import './global.css';
+import Header from '../components/header';
 
 const style: React.CSSProperties = {
 	fontFamily: '"Open Sans", sans-serif',
@@ -22,8 +23,9 @@ function Layout({ children }: { children: React.ReactNode }) {
 					rel="stylesheet"
 				/>
 			</head>
-			<body className="mx-auto text-white bg-gray-800 m-0 p-0 h-screen overflow-x-hidden">
-				<div className="max-w-7xl mx-auto">{children}</div>
+			<body className="mx-auto text-white bg-gray-800 font-mono m-0 p-0 overflow-x-hidden">
+				<Header />
+				<div className="max-w-7xl mx-auto mt-28">{children}</div>
 			</body>
 		</html>
 	);

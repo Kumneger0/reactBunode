@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import { join, resolve } from 'path';
 import * as prettier from 'prettier';
 import React, { type FC } from 'react';
+const postCssPlugin = require('esbuild-style-plugin');
 
 //@ts-expect-error
 
@@ -56,7 +57,14 @@ export async function buildForProduction(baseDir = 'app') {
 export async function bundle(entryPoints: Set<string>) {
 	await build({
 		entryPoints: [...entryPoints],
-		plugins: [generateStaticHTMLPlugin(), parseTwClassNames()],
+		plugins: [
+			generateStaticHTMLPlugin(),
+			postCssPlugin({
+				postcss: {
+					plugins: [require('tailwindcss'), require('autoprefixer')]
+				}
+			})
+		],
 		bundle: true,
 		outdir: join(process.cwd(), '.reactbunode', 'prd'),
 		packages: 'external',
@@ -226,6 +234,12 @@ async function addMetaData(
 
 		dom.window.document.head.appendChild(link);
 	}
+
+	const link = dom.window.document.createElement('link');
+	link.rel = 'stylesheet';
+	link.href = '/layout.css';
+	link.type = 'text/css';
+	dom.window.document.head.appendChild(link);
 
 	if (!metataInfo) return dom.serialize();
 	Object.keys(metataInfo).map((key) => {

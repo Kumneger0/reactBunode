@@ -1,159 +1,27 @@
 import React from 'react';
 
-export const metadata = {
-	title: 'Demo E-commerse application',
-	description: 'This is a demo e-commerse application built with ReactBunny',
-	keywords: 'demo, e-commerse, application, reactbunny',
-	openGraph: {
-		images: []
-	}
-};
-
-async function Page() {
+const LandingPage = () => {
 	return (
 		<>
-			<h1 className="w-full text-center capitalize">docs for ReactBunode</h1>
-			<div className="flex  relative flex-wrap justify-center gap-5">
-				<div className="w-1/3  flex items-center flex-col gap-1 top-3 max-h-[600px] sticky">
-					<div className="font-bold  text-lg">
-						<a className="text-white  text-decoration-none" href="#get-started">
-							Get Started
-						</a>
-					</div>
-					<div className="font-bold  text-lg">
-						<a className="text-white text-decoration-none" href="#Installation">
-							Installation
-						</a>
-					</div>
-					<div className="font-bold  text-lg">
-						<a className="text-white text-decoration-none" href="#Setting-up-new-Project">
-							Setting up new Project
-						</a>
-					</div>
-					<div className="font-bold  text-lg">
-						<a className="text-white text-decoration-none" href="#Pages">
-							Pages
-						</a>
-					</div>
-					<div className="font-bold  text-lg">
-						<a className="text-white text-decoration-none" href="#Routes">
-							Routes
-						</a>
-					</div>
-					<div className="font-bold  text-lg">
-						<a className="text-white text-decoration-none" href="#functions">
-							functions
-						</a>
-					</div>
-					<div className="font-bold  text-lg">
-						<a className="text-white text-decoration-none" href="#Metadata">
-							Metadata
-						</a>
-					</div>
-				</div>
-				<div className="w-[60%]">
-					<div id="get-started" className="p-2 my-3">
-						<h1 className="font-bold text-xl">Get Started</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
-					</div>
-					<div id="Installation" className="p-2 my-3">
-						<h1 className="font-bold text-xl">Installation</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
-					</div>
-					<div id="Setting-up-new-Project" className="p-2 my-3">
-						<h1 className="font-bold text-xl">Setting up new Project</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
-					</div>
-					<div id="Pages" className="p-2 my-3">
-						<h1 className="font-bold text-xl">Pages</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
-					</div>
-					<div id="Routes" className="p-2 my-3">
-						<h1 className="font-bold text-xl">Routes</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
-					</div>
-					<div id="functions" className="p-2 my-3">
-						<h1 className="font-bold text-xl">functions</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
-					</div>
-					<div id="Metadata" className="p-2 my-3">
-						<h1 className="font-bold text-xl">Metadata</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
+			<div className="py-6 flex flex-col justify-center overflow-y-hidden sm:py-12">
+				<div className="relative py-3 sm:max-w-xl sm:mx-auto">
+					<div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
+					<div className="relative px-4 py-10 shadow-lg sm:rounded-3xl sm:p-20">
+						<h1 className="text-4xl font-bold text-center">ReactBunode</h1>
+						<p className="text-center mt-4">A powerful SSG library for React, built with love.</p>
+						<div className="flex justify-center mt-8">
+							<a
+								href="/docs#get-started"
+								className="px-4 py-2 text-white font-semibold bg-blue-500 rounded-lg shadow-md hover:bg-blue-700"
+							>
+								Get Started
+							</a>
 						</div>
 					</div>
 				</div>
 			</div>
 		</>
 	);
-}
+};
 
-export default Page;
+export default LandingPage;

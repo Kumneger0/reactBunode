@@ -1,4 +1,4 @@
-import { type Config } from 'prettier';
+import { doc, type Config } from 'prettier';
 import { renderToString } from 'react-dom/server';
 
 //@ts-expect-error
@@ -88,7 +88,6 @@ export function Content({ s1 }: { s1: ReadableStream }) {
 
 export function deleteDynamicImportCache(paths: Array<string>) {
 	for (const path of paths) {
-		console.log('clearing cahce for page', path);
 		delete require.cache[require.resolve(path)];
 	}
 }
