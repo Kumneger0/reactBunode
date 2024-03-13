@@ -1,19 +1,25 @@
 import { join } from 'path';
-import { build as esbuild } from 'esbuild';
+import { build as esbuild, context } from 'esbuild';
 
-await esbuild({
+const serverContext = await context({
 	entryPoints: [join(process.cwd(), 'index.tsx')],
 	bundle: true,
 	outdir: join(process.cwd(), 'dist'),
 	format: 'esm',
-	packages: 'external'
+	packages: 'external',
+	logLevel: 'info'
 });
 
-await esbuild({
+await serverContext.watch();
+
+const clientContext = await context({
 	entryPoints: [join(process.cwd(), 'root-client.tsx')],
 	bundle: true,
 	outdir: join(process.cwd(), 'dist'),
-	format: 'esm'
+	format: 'esm',
+	logLevel: 'info'
 });
 
-console.log('Build successful!');
+await clientContext.watch();
+
+console.log('wathcin');

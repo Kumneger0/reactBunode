@@ -1,3 +1,4 @@
+import Hapi from '@hapi/hapi';
 import { parse } from 'es-module-lexer';
 import { context, type BuildResult, type Plugin } from 'esbuild';
 import { build } from 'esbuild';
@@ -12,6 +13,8 @@ import { clientResolver } from '../plugins/client-component-resolver';
 import { esbuildConfig } from './../utils/utils';
 export const clientEntryPoints = new Set<string>();
 
+const postCssPlugin = require('esbuild-style-plugin');
+
 /**
  * Handles routing and building pages for the React app.
  *
@@ -21,7 +24,7 @@ export async function routeHandler(req: HonoRequest) {
 	const url = new URL(req.url);
 	const searchParams = url.searchParams;
 
-	await isAppropriateFilesExist(url);
+	await isAppropriateFilesExist();
 
 	const currentPath = join(process.cwd(), 'app', url.pathname);
 
@@ -30,7 +33,7 @@ export async function routeHandler(req: HonoRequest) {
 	let dynamicRouteStatus: ReturnType<typeof checkCurrentRouteDynamicStatus> | null = null;
 
 	if (!isPathExists) {
-		dynamicRouteStatus = checkCurrentRouteDynamicStatus(url);
+		dynamicRouteStatus = checkCurrentRouteDynamicStatus(url.pathname);
 	}
 
 	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
@@ -61,16 +64,25 @@ export async function routeHandler(req: HonoRequest) {
 		.filter(({ path }) => existsSync(path))
 		.map(({ path }) => path);
 
+	const globalsCssFilePath = join(process.cwd(), 'app/global.css');
+
 	// for (const { path, outdir } of pageComponents) {
-	const result = await context({
+	const result = await build({
 		...esbuildConfig,
-		entryPoints: [...pageComponents],
+		entryPoints: [...pageComponents, globalsCssFilePath],
 		outdir: join(process.cwd(), '.reactbunode', 'dev'),
-		plugins: [clientResolver, parseTwClassNames()],
+		plugins: [
+			clientResolver,
+			// parseTwClassNames(),
+			postCssPlugin({
+				postcss: {
+					plugins: [require('tailwindcss'), require('autoprefixer')]
+				}
+			})
+		],
 		packages: 'external',
 		jsxFactory: 'jsx'
 	});
-	await result.watch();
 	// }
 
 	const clientResult = await build({
@@ -105,7 +117,7 @@ export async function routeHandler(req: HonoRequest) {
  * [slug]. If so, iterates through the nested route folders to find the one
  * matching the dynamic pattern. Extracts the slug by removing the brackets.
  */
-function checkCurrentRouteDynamicStatus(url: URL) {
+function checkCurrentRouteDynamicStatus(pathname: string) {
 	const dynamicRouteRegEx = /\[[^\]\n]+\]$/gimsu;
 
 	let dynamicRouteStatus = {
@@ -113,7 +125,7 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 		path: ''
 	} as Record<string, string | boolean>;
 
-	const splitedPathName = url.pathname.split('/').slice(0, -1).join('/');
+	const splitedPathName = pathname.split('/').slice(0, -1).join('/');
 	const pathsToCheckDynicRoute = join(process.cwd(), 'app', splitedPathName);
 
 	if (!existsSync(pathsToCheckDynicRoute)) throw new Error('not found');
@@ -134,7 +146,7 @@ function checkCurrentRouteDynamicStatus(url: URL) {
 	};
 }
 
-async function isAppropriateFilesExist(url: URL) {
+async function isAppropriateFilesExist() {
 	const isrootLayoutExists = existsSync(join(process.cwd(), 'app', 'layout.tsx'));
 
 	if (!isrootLayoutExists) {
