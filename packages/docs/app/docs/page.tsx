@@ -17,7 +17,7 @@ async function Page() {
 	return (
 		<>
 			<div className="flex relative flex-wrap justify-center gap-5">
-				<div className="w-[20%] justify-center items-center flex-col gap-2 top-[80px] max-h-[600px] sticky bg-gray-800 text-white p-6 rounded-lg shadow-lg">
+				<div className="w-[20%]  gap-2 top-[80px] max-h-[600px] sticky bg-gray-800 text-white p-6 rounded-lg shadow-lg">
 					<div className="font-bold text-lg">
 						<a className="text-white text-decoration-none hover:text-blue-500" href="#get-started">
 							Get Started
@@ -59,16 +59,18 @@ async function Page() {
 				</div>
 				<div className="w-[65%]">
 					<div id="get-started" className="p-4 my-3 leading-5">
-						<h1 className="font-bold text-xl">Get Started</h1>
-						<div>
+						<h1 className="font-bold  text-xl">Get Started</h1>
+						<div className="leading-7">
 							Welcome to the exciting world of static site generation (SSG) with our innovative
 							library! This library empowers React developers to craft blazing-fast static HTML
 							websites, offering a unique approach to building web experiences. It's currently under
 							active development, and we'd love your feedback as you experiment with its
 							capabilities.
-							<h1 className="text-lg font-semibold">Important Note</h1> This library requires the
-							Bun runtime to function. If you haven't already, you'll need to install Bun before you
-							can use our SSG library.
+							<div className="bg-orange-700 p-5 my-3 rounded-lg">
+								<h1 className="text-lg font-semibold">Important Note</h1> This library requires the
+								Bun runtime to function. If you haven't already, you'll need to install Bun before
+								you can use our SSG library.
+							</div>
 						</div>
 					</div>
 					<div id="Installation" className="p-4 my-3">
@@ -103,59 +105,19 @@ async function Page() {
 					</div>
 					<div id="Pages" className="p-4 my-3">
 						<h1 className="font-bold text-xl">Pages</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
+						<div></div>
 					</div>
 					<div id="Routes" className="p-4 my-3">
 						<h1 className="font-bold text-xl">Routes</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
+						<div></div>
 					</div>
 					<div id="functions" className="p-4 my-3">
 						<h1 className="font-bold text-xl">functions</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
+						<div></div>
 					</div>
 					<div id="Metadata" className="p-4 my-3">
 						<h1 className="font-bold text-xl">Metadata</h1>
-						<div>
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero at atque voluptates
-							architecto aliquid nisi a placeat ea repellendus numquam hic, sint culpa tempora
-							facere exercitationem tenetur maiores labore voluptatum beatae blanditiis expedita
-							deserunt saepe soluta distinctio? Dolore commodi exercitationem dolores blanditiis.
-							Odit, velit. Ea voluptatem laudantium, repellat velit aliquid magni odio eum sunt
-							maiores fuga autem dolores similique atque suscipit, quibusdam accusantium nesciunt
-							reprehenderit vitae. Soluta iste repellendus error facilis assumenda, accusamus
-							voluptatem cupiditate. Error consectetur tenetur eaque eveniet, rem esse sit dolores
-							nesciunt non eum maxime, magnam
-						</div>
+						<div></div>
 					</div>
 				</div>
 			</div>
@@ -205,18 +167,29 @@ export default function Layout({ children }) {
 					<br />
 
 					<li>
-						In the <code>layout.tsx</code> or <code>layout.jsx</code> file, export a React component
-						that takes <code>children</code> as a prop and renders them on the page. This component
-						will wrap all your application's pages, providing a consistent layout across your site.
+						<div>
+							In the <code>layout.tsx</code> or <code>layout.jsx</code> file, export a React
+							component that takes <code>children</code> as a prop and renders them on the page.
+							This component will wrap all your application's pages, providing a consistent layout
+							across your site.
+						</div>
+
+						<br />
+						<p>
+							Here's an example of what your <code>layout.tsx</code> or <code>layout.jsx</code> file
+							might look like:
+						</p>
+						<SyntaxHighlighter language="jsx" style={theme}>
+							{markdown}
+						</SyntaxHighlighter>
+					</li>
+					<br />
+					<li>
+						Next Inside the <code>app</code> folder, create a another file named{' '}
+						<code>page.tsx</code> or <code>page.jsx</code>
+						from that file export default this is also similar Next.js.
 					</li>
 				</ol>
-				<p>
-					Here's an example of what your <code>layout.tsx</code> or <code>layout.jsx</code> file
-					might look like:
-				</p>
-				<SyntaxHighlighter language="jsx" style={theme}>
-					{markdown}
-				</SyntaxHighlighter>
 			</div>
 		</div>
 	);
