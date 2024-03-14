@@ -1,19 +1,18 @@
-import Hapi from '@hapi/hapi';
+import autoPrefixer from 'autoprefixer';
 import { parse } from 'es-module-lexer';
-import { context, type BuildResult, type Plugin } from 'esbuild';
-import { build } from 'esbuild';
+import { build, type BuildResult, type Plugin } from 'esbuild';
+import postCssPlugin from 'esbuild-style-plugin';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import type { HonoRequest } from 'hono';
 import { readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { join, resolve as nodeResolve } from 'path';
+import tailwind from 'tailwindcss';
 import { twj } from 'tw-to-css';
 import { clientResolver } from '../plugins/client-component-resolver';
 import { esbuildConfig } from './../utils/utils';
 export const clientEntryPoints = new Set<string>();
-
-const postCssPlugin = require('esbuild-style-plugin');
 
 /**
  * Handles routing and building pages for the React app.
@@ -42,48 +41,43 @@ export async function routeHandler(req: HonoRequest) {
 		? join(process.cwd(), 'app', splitedPathName, dynamicRouteStatus?.path)
 		: currentPath;
 
-	const loadingFilePath = join(componentPath, 'loading.tsx');
 	const pagePath = join(componentPath, 'page.tsx');
 	const rootLayoutPath = join(process.cwd(), 'app', 'layout.tsx');
+	const pageLayoutPath = join(componentPath, 'layout.tsx');
 
 	const outdir = dynamicRouteStatus?.isDynamic
 		? join(process.cwd(), '.reactbunode', 'dev', splitedPathName, dynamicRouteStatus.path)
 		: join(process.cwd(), '.reactbunode', 'dev', url.pathname);
 
-	const unfillteredPagePaths = [
-		{ path: pagePath, type: 'page' as const, outdir },
-		{
-			path: rootLayoutPath,
-			type: 'layout' as const,
-			outdir: join(process.cwd(), '.reactbunode', 'dev')
-		},
-		{ path: loadingFilePath, type: 'loading' as const, outdir }
-	];
+	const unfillteredPagePaths = [pagePath, rootLayoutPath, pageLayoutPath];
 
-	const pageComponents = unfillteredPagePaths
-		.filter(({ path }) => existsSync(path))
-		.map(({ path }) => path);
+	const filteredPagePathes = unfillteredPagePaths.filter((path) => existsSync(path));
 
-	const globalsCssFilePath = join(process.cwd(), 'app/global.css');
+	const configFile = join(process.cwd(), 'reactbunode.config.ts');
+	if (existsSync(configFile)) {
+		const { default: conifg } = await import(configFile);
+		console.log(conifg);
+	}
 
-	// for (const { path, outdir } of pageComponents) {
+	const emptyPlugin: Plugin = {
+		name: 'placehoder-plugin-if-config-FileNotFound',
+		setup(build) {
+			build.onStart(() => {
+				console.log('no config file detected');
+			});
+		}
+	};
+
+	const config = existsSync(configFile) ? (await import(configFile)).default : emptyPlugin;
+
 	const result = await build({
 		...esbuildConfig,
-		entryPoints: [...pageComponents, globalsCssFilePath],
+		entryPoints: [...filteredPagePathes],
 		outdir: join(process.cwd(), '.reactbunode', 'dev'),
-		plugins: [
-			clientResolver,
-			// parseTwClassNames(),
-			postCssPlugin({
-				postcss: {
-					plugins: [require('tailwindcss'), require('autoprefixer')]
-				}
-			})
-		],
+		plugins: [clientResolver, config],
 		packages: 'external',
 		jsxFactory: 'jsx'
 	});
-	// }
 
 	const clientResult = await build({
 		...esbuildConfig,
