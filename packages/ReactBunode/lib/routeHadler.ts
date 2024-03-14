@@ -1,15 +1,12 @@
-import autoPrefixer from 'autoprefixer';
 import { parse } from 'es-module-lexer';
-import { build, type BuildResult, type Plugin } from 'esbuild';
+import { build, type BuildResult } from 'esbuild';
 import postCssPlugin from 'esbuild-style-plugin';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import type { HonoRequest } from 'hono';
-import { readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { join, resolve as nodeResolve } from 'path';
-import tailwind from 'tailwindcss';
-import { twj } from 'tw-to-css';
+import type { ReactBunodeConfig } from '../config';
 import { clientResolver } from '../plugins/client-component-resolver';
 import { esbuildConfig } from './../utils/utils';
 export const clientEntryPoints = new Set<string>();
@@ -19,6 +16,18 @@ export const clientEntryPoints = new Set<string>();
  *
  * Parses the request URL and path to determine the page to render. Checks if pages and layouts exist on disk. Builds pages, layout, and client bundles with esbuild. Returns props and client component map for rendering.
  */
+const configFile = join(process.cwd(), 'reactbunode.config.ts');
+
+const tsConfigFilePath = join(process.cwd(), 'tsconfig.json');
+
+const { style, ...esbuildUserConfig } = (
+	existsSync(configFile) ? (await import(configFile)).default : {}
+) as ReactBunodeConfig;
+
+export const filesWeAreLookingFor = existsSync(tsConfigFilePath)
+	? (['layout.tsx', 'page.tsx'] as const)
+	: (['layout.jsx', 'page.jsx'] as const);
+
 export async function routeHandler(req: HonoRequest) {
 	const url = new URL(req.url);
 	const searchParams = url.searchParams;
@@ -41,9 +50,12 @@ export async function routeHandler(req: HonoRequest) {
 		? join(process.cwd(), 'app', splitedPathName, dynamicRouteStatus?.path)
 		: currentPath;
 
-	const pagePath = join(componentPath, 'page.tsx');
-	const rootLayoutPath = join(process.cwd(), 'app', 'layout.tsx');
-	const pageLayoutPath = join(componentPath, 'layout.tsx');
+	const page = filesWeAreLookingFor[1];
+	const layout = filesWeAreLookingFor[0];
+
+	const pagePath = join(componentPath, page);
+	const rootLayoutPath = join(process.cwd(), 'app', layout);
+	const pageLayoutPath = join(componentPath, layout);
 
 	const outdir = dynamicRouteStatus?.isDynamic
 		? join(process.cwd(), '.reactbunode', 'dev', splitedPathName, dynamicRouteStatus.path)
@@ -53,36 +65,21 @@ export async function routeHandler(req: HonoRequest) {
 
 	const filteredPagePathes = unfillteredPagePaths.filter((path) => existsSync(path));
 
-	const configFile = join(process.cwd(), 'reactbunode.config.ts');
-	if (existsSync(configFile)) {
-		const { default: conifg } = await import(configFile);
-		console.log(conifg);
-	}
-
-	const emptyPlugin: Plugin = {
-		name: 'placehoder-plugin-if-config-FileNotFound',
-		setup(build) {
-			build.onStart(() => {
-				console.log('no config file detected');
-			});
-		}
-	};
-
-	const config = existsSync(configFile) ? (await import(configFile)).default : emptyPlugin;
-
 	const result = await build({
+		...esbuildUserConfig,
 		...esbuildConfig,
 		entryPoints: [...filteredPagePathes],
 		outdir: join(process.cwd(), '.reactbunode', 'dev'),
-		plugins: [clientResolver, config],
+		plugins: [clientResolver, postCssPlugin(style?.postcss ? { postcss: style.postcss } : {})],
 		packages: 'external',
 		jsxFactory: 'jsx'
 	});
 
 	const clientResult = await build({
+		...esbuildUserConfig,
 		...esbuildConfig,
 		entryPoints: [...clientEntryPoints],
-		plugins: [parseTwClassNames()],
+		plugins: [postCssPlugin(style?.postcss ? { postcss: style.postcss } : {})],
 		outdir: nodeResolve(process.cwd(), '.reactbunode', 'dev'),
 		write: false
 	});
@@ -141,7 +138,7 @@ function checkCurrentRouteDynamicStatus(pathname: string) {
 }
 
 async function isAppropriateFilesExist() {
-	const isrootLayoutExists = existsSync(join(process.cwd(), 'app', 'layout.tsx'));
+	const isrootLayoutExists = existsSync(join(process.cwd(), 'app', filesWeAreLookingFor[0]));
 
 	if (!isrootLayoutExists) {
 		throw new Error('please define root layout in app dir');
@@ -182,21 +179,4 @@ async function appendClientBuildReactMetaData(clientResult: BuildResult) {
 		await writeFile(path, newContents);
 	}
 	return clientComponentMap;
-}
-
-export function parseTwClassNames(): Plugin {
-	return {
-		name: 'es-build-plugin-tw-classNames-to-inline-styles',
-		setup(build) {
-			build.onLoad({ filter: /\.(tsx|jsx)$/ }, async ({ path }) => {
-				const contents = await readFile(path, 'utf-8');
-				const processedHtml = contents.replace(/className="([^"]+)"/g, (match, classes) => {
-					const inlineStyles = twj(classes);
-
-					return `style={${JSON.stringify({ ...inlineStyles })}}`;
-				});
-				return { contents: processedHtml, loader: 'tsx' };
-			});
-		}
-	};
 }

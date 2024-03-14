@@ -47,7 +47,9 @@
 		"serve-static": "1.15.0",
 		"tw-to-css": "0.0.12",
 		"watchpack": "2.4.0",
-		"ws": "8.16.0"
+		"ws": "8.16.0",
+		"esbuild-style-plugin": "1.6.3",
+		"postcss": "8.4.35"
 	},
 	"version": "0.0.10",
 	"description": "simple static site generator using react",
