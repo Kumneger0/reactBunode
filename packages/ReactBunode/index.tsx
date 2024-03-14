@@ -22,29 +22,6 @@ import { buildForProduction, bundle } from './lib/buildPages.js';
 import { routeHandler } from './lib/routeHadler.js';
 import { Content, getPageComponents, sendNotFoundHTML } from './utils/utils.js';
 
-const wss = new WebSocketServer({ port: 8080 });
-
-wss.on('connection', function connection(ws) {
-	const wp = new Watchpack({
-		aggregateTimeout: 500,
-		poll: true,
-		followSymlinks: true
-	});
-
-	wp.watch({
-		directories: [join(process.cwd(), 'app')]
-	});
-
-	wp.on('change', (filePath, mtime) => {
-		console.log(`${filePath} changed`);
-		ws.send('reload');
-	});
-
-	ws.on('error', console.error);
-
-	ws.on('close', (code, reason) => wp.close());
-});
-
 const app = new Hono();
 
 const handers = {
@@ -78,6 +55,31 @@ try {
  * Checks if endpoint file exists and handles routing to the appropriate handler function for the request method.
  * Returns 404 if endpoint not found.
  */
+
+if (command == 'dev') {
+	const wss = new WebSocketServer({ port: 8080 });
+
+	wss.on('connection', function connection(ws) {
+		const wp = new Watchpack({
+			aggregateTimeout: 500,
+			poll: true,
+			followSymlinks: true
+		});
+
+		wp.watch({
+			directories: [join(process.cwd(), 'app')]
+		});
+
+		wp.on('change', (filePath, mtime) => {
+			console.log(`${filePath} changed`);
+			ws.send('reload');
+		});
+
+		ws.on('error', console.error);
+
+		ws.on('close', (code, reason) => wp.close());
+	});
+}
 
 function devMode() {
 	app.use('/api/*', async (c, next) => {
@@ -125,7 +127,6 @@ function devMode() {
 		if (!isFileExists) return new Response('file not found');
 
 		const file = Bun.file(filePath);
-		console.log(file);
 		return new Response(file);
 	});
 
@@ -138,16 +139,9 @@ function devMode() {
 
 			const { props, clientComponentMap, outdir } = handlerResult;
 
-			const { Layout, Loading, Page } = await getPageComponents(outdir);
+			const comp = await getPageComponents(outdir, props);
 
-			const stream = rscDomWebpack.renderToReadableStream(
-				<Layout>
-					<Suspense fallback={Loading ? <Loading /> : 'loading'}>
-						<Page {...props} />
-					</Suspense>
-				</Layout>,
-				clientComponentMap
-			);
+			const stream = rscDomWebpack.renderToReadableStream(comp, clientComponentMap);
 
 			let [s1, s2] = stream.tee();
 

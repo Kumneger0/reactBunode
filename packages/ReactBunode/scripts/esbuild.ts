@@ -1,8 +1,10 @@
 import { join } from 'path';
 import { build as esbuild, context } from 'esbuild';
 
+const configDir = join(process.cwd(), 'config', 'index.ts');
+
 const serverContext = await context({
-	entryPoints: [join(process.cwd(), 'index.tsx')],
+	entryPoints: [join(process.cwd(), 'index.tsx'), configDir],
 	bundle: true,
 	outdir: join(process.cwd(), 'dist'),
 	format: 'esm',

@@ -13,20 +13,24 @@
 		"skipLibCheck": true,
 		"noFallthroughCasesInSwitch": true,
 		"forceConsistentCasingInFileNames": true,
+		"declaration": true,
+		"emitDeclarationOnly": true,
 		"checkJs": true,
 		"module": "ESNext",
 		"outDir": "dist",
 		"moduleResolution": "Node",
 		"target": "ESNext",
 		"jsx": "react-jsx",
-		"noEmit": true,
 		"strict": true,
 		"noImplicitAny": true,
 		"allowSyntheticDefaultImports": true,
 		"resolveJsonModule": true
 	},
 	"include": [
-		"./"
+		"index.tsx",
+		"root-client.tsx",
+		"config/index.ts",
+		"types/types.ts"
 	],
 	"exclude": [
 		"node_modules"

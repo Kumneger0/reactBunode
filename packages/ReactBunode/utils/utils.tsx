@@ -7,7 +7,8 @@ import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js
 import type { BuildOptions } from 'esbuild';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import React from 'react';
+import React, { Suspense } from 'react';
+import type { Module } from '../types/types';
 
 export function sendNotFoundHTML() {
 	const string = renderToString(<NotFoundPage />);
@@ -44,23 +45,55 @@ function NotFoundPage() {
 	);
 }
 
-export async function getPageComponents(outdir: string) {
+function ReduceComponets({ children }: { children: React.ReactNode }) {
+	return <>{children}</>;
+}
+
+export async function getPageComponents(outdir: string, props: Record<string, any>) {
 	const layoutPath = join(process.cwd(), '.reactbunode', 'dev', 'layout.js');
 	const pagePath = join(outdir, 'page.js');
-	const loadingPath = join(outdir, 'loading.js');
+	const pageLayoutFile = join(outdir, 'layout.js');
 
-	const pathsToDeleteCache = [pagePath, layoutPath, loadingPath].filter((path) => existsSync(path));
+	const pathsToDeleteCache = [pagePath, layoutPath, pageLayoutFile].filter((path) =>
+		existsSync(path)
+	);
 
 	deleteDynamicImportCache(pathsToDeleteCache);
 
-	let loading;
-	if (existsSync(loadingPath)) {
-		loading = (await import(loadingPath)).default;
+	const { default: Layout } = (await import(layoutPath)) as Module;
+	const { default: PageLayout, rootLayoutNoWrap } = (await import(pageLayoutFile)) as Module & {
+		rootLayoutNoWrap: boolean;
+	};
+	const Page = (await import(pagePath)).default as Module['default'];
+
+	if (rootLayoutNoWrap && !!PageLayout) {
+		return (
+			<>
+				<PageLayout>
+					<Suspense fallback={'loading'}>
+						<Page {...props} />
+					</Suspense>
+				</PageLayout>
+			</>
+		);
 	}
 
-	const { default: Layout } = await import(layoutPath);
-	const Page = (await import(pagePath)).default;
-	return { Layout, Page, Loading: loading };
+	const ReducedComponent = (
+		<Layout>
+			{!!PageLayout ? (
+				<PageLayout>
+					<Suspense fallback={'loading'}>
+						<Page {...props} />
+					</Suspense>
+				</PageLayout>
+			) : (
+				<Suspense fallback={'loading'}>
+					<Page {...props} />
+				</Suspense>
+			)}
+		</Layout>
+	);
+	return ReducedComponent;
 }
 
 export const esbuildConfig: BuildOptions = {
