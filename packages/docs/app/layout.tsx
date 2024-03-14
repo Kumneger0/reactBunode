@@ -1,7 +1,7 @@
 import React from 'react';
 
 import './global.css';
-import Header from '../components/header';
+import Header from '@comp/header';
 
 const style: React.CSSProperties = {
 	fontFamily: '"Open Sans", sans-serif',
