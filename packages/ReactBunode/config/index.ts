@@ -1,16 +1,13 @@
+import type { BuildOptions } from 'esbuild';
 import postCssPlugin from 'esbuild-style-plugin';
 import { type AcceptedPlugin } from 'postcss';
 
-type ReactBunodeConfig = {
-	style: {
-		postcss: {
-			plugins: AcceptedPlugin[];
+export type ReactBunodeConfig = Partial<
+	BuildOptions & {
+		style: {
+			postcss: {
+				plugins: AcceptedPlugin[];
+			};
 		};
-	};
-};
-
-export function defineConfig(config: ReactBunodeConfig) {
-	return postCssPlugin({
-		postcss: config.style.postcss
-	});
-}
+	}
+>;

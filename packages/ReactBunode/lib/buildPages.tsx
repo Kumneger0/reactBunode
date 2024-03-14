@@ -19,8 +19,9 @@ import { renderToReadableStream } from 'react-dom/server';
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { formatConfig } from '../utils/utils';
-import { parseTwClassNames } from './routeHadler';
+
 import type { Metadata, TJSDOM } from '../types/types';
+import { filesWeAreLookingFor } from './routeHadler';
 
 const dir = resolve(process.cwd());
 
@@ -28,7 +29,7 @@ function getAppPath(baseDir: string) {
 	return resolve(dir, baseDir);
 }
 
-const filesToGenerateSSG = ['layout.tsx', 'layout.jsx', 'page.tsx', 'page.jsx'] as const;
+const filesToGenerateSSG = filesWeAreLookingFor as unknown as string[];
 
 const entryPoints = new Set<string>();
 export async function buildForProduction(baseDir = 'app') {
@@ -41,12 +42,7 @@ export async function buildForProduction(baseDir = 'app') {
 			if (stat.isDirectory()) {
 				return await buildForProduction(join(baseDir, file));
 			}
-			if (
-				stat.isFile() &&
-				filesToGenerateSSG.includes(
-					file.toLowerCase().trim() as (typeof filesToGenerateSSG)[number]
-				)
-			) {
+			if (stat.isFile() && filesToGenerateSSG.includes(file.toLowerCase().trim())) {
 				entryPoints.add(eachfileAbsolutePath);
 			}
 		})

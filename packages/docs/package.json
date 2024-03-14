@@ -1,24 +1,22 @@
 {
-  "name": "docs",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "reactBunode dev",
-    "build": "reactBunode build",
-    "start": "reactBunode start",
-    "lint": "echo 'Add lint script here'"
-  },
-  "dependencies": {
-    "@types/react-syntax-highlighter": "15.5.11",
-    "eslint": "8.57.0",
-    "react-markdown": "9.0.1",
-    "react-syntax-highlighter": "15.5.0",
-    "reactbunode": "link:reactbunode"
-  },
-  "devDependencies": {
-    "autoprefixer": "10.4.18",
-    "esbuild-style-plugin": "1.6.3",
-    "postcss": "8.4.35",
-    "tailwindcss": "3.4.1"
-  }
+	"name": "docs",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "reactBunode dev",
+		"build": "reactBunode build",
+		"start": "reactBunode start",
+		"lint": "echo 'Add lint script here'"
+	},
+	"dependencies": {
+		"@types/react-syntax-highlighter": "15.5.11",
+		"eslint": "8.57.0",
+		"react-markdown": "9.0.1",
+		"react-syntax-highlighter": "15.5.0",
+		"reactbunode": "link:reactbunode"
+	},
+	"devDependencies": {
+		"autoprefixer": "10.4.18",
+		"tailwindcss": "3.4.1"
+	}
 }

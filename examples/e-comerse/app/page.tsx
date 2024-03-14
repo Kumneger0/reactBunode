@@ -28,7 +28,7 @@ async function Page() {
 		| undefined;
 	return (
 		<>
-			<h1 className="w-full text-center">DEMO E-commerse application</h1>
+			<h1 className="w-full text-center font-bold text-3xl">DEMO E-commerse application</h1>
 			<div className="flex flex-wrap justify-center gap-5">
 				{products?.map((item, index) => <Card {...item} />)}
 			</div>

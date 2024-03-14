@@ -61,7 +61,9 @@ export async function getPageComponents(outdir: string, props: Record<string, an
 	deleteDynamicImportCache(pathsToDeleteCache);
 
 	const { default: Layout } = (await import(layoutPath)) as Module;
-	const { default: PageLayout, rootLayoutNoWrap } = (await import(pageLayoutFile)) as Module & {
+	const { default: PageLayout, rootLayoutNoWrap } = (
+		existsSync(pageLayoutFile) ? await import(pageLayoutFile) : {}
+	) as Module & {
 		rootLayoutNoWrap: boolean;
 	};
 	const Page = (await import(pagePath)).default as Module['default'];

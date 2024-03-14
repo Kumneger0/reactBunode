@@ -24,4 +24,4 @@ const clientContext = await context({
 
 await clientContext.watch();
 
-console.log('wathcin');
+console.log('wathching');

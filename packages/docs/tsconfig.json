@@ -1,0 +1,38 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "ESNext",
+            "DOM"
+        ],
+        "moduleDetection": "force",
+        "allowJs": true,
+        /* Bundler mode */
+        "allowImportingTsExtensions": true,
+        "verbatimModuleSyntax": true,
+        /* Linting */
+        "skipLibCheck": true,
+        "noFallthroughCasesInSwitch": true,
+        "forceConsistentCasingInFileNames": true,
+        "checkJs": true,
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "target": "ESNext",
+        "jsx": "react-jsx",
+        "noEmit": true,
+        "strict": true,
+        "noImplicitAny": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "paths": {
+            "@comp/*": [
+                "./components/*"
+            ]
+        }
+    },
+    "include": [
+        "./"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
