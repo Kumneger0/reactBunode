@@ -111,18 +111,25 @@ async function handleEachDir({ file, path, baseDir, convertoHTML }: HandleDirPro
 			getStaticPaths: (() => Promise<Array<Record<string, any>> | undefined>) | undefined;
 		};
 
-		if (!getStaticPaths)
-			throw new Error(`Please export async function named getStaticPaths from dynamic route
+		if (!getStaticPaths) {
+			console.error(`Please export async function named getStaticPaths from dynamic route
 		 no function named getStaticPaths found in ${join(path, file, 'page.js')}
 		
 			`);
+			process.exit(1);
+
+			return;
+		}
 
 		const staticPaths = await getStaticPaths();
 
-		if (!staticPaths)
-			throw new Error(`
+		if (!staticPaths) {
+			console.error(`
 	       getStaticPaths function in ${join(file, 'page.tsx')} route is not returning an array of objects, please check the documentation
 		`);
+			process.exit(1);
+			return;
+		}
 
 		console.log(`trying to generate ${staticPaths.length} pages in route ${file}`);
 
