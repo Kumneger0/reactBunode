@@ -1,5 +1,5 @@
 {
-	"name": ".",
+	"name": "e-comerse",
 	"module": "app/page.tsx",
 	"type": "module",
 	"devDependencies": {
@@ -9,6 +9,9 @@
 		"dev": "reactBunode dev",
 		"build": "reactBunode build",
 		"start": "reactBunode start"
+	},
+	"dependencies": {
+		"reactbunode": "0.0.11"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
