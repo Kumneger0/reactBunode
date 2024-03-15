@@ -2,7 +2,7 @@
 	"name": "createreactbunode",
 	"module": "dist/index.js",
 	"description": "project scaffoder for reactbunode",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"type": "module",
 	"devDependencies": {
 		"@types/bun": "latest"

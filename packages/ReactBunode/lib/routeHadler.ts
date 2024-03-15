@@ -16,15 +16,20 @@ export const clientEntryPoints = new Set<string>();
  *
  * Parses the request URL and path to determine the page to render. Checks if pages and layouts exist on disk. Builds pages, layout, and client bundles with esbuild. Returns props and client component map for rendering.
  */
-const configFile = join(process.cwd(), 'reactbunode.config.ts');
 
 const tsConfigFilePath = join(process.cwd(), 'tsconfig.json');
+
+const isTypeScript = existsSync(tsConfigFilePath);
+
+const configFile = isTypeScript
+	? join(process.cwd(), 'reactbunode.config.ts')
+	: join(process.cwd(), 'reactbunode.config.js');
 
 const { style, ...esbuildUserConfig } = (
 	existsSync(configFile) ? (await import(configFile)).default : {}
 ) as ReactBunodeConfig;
 
-export const filesWeAreLookingFor = existsSync(tsConfigFilePath)
+export const filesWeAreLookingFor = isTypeScript
 	? (['layout.tsx', 'page.tsx'] as const)
 	: (['layout.jsx', 'page.jsx'] as const);
 
