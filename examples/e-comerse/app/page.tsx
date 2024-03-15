@@ -48,6 +48,7 @@ const Card = ({ title, id, image, price, description }: Products) => (
 		/>
 		<p className="line-clamp-2 p-1 mb-2">{description}</p>
 		<p className="text-xl font-bold mb-2">${price}</p>
+
 		<a href={`/${id}`} className="text-white">
 			Detail
 		</a>
