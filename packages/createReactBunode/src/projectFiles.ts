@@ -432,6 +432,37 @@ const tsconfig = `
 }
 `;
 
+const reactBunodeConfig = `
+import { join } from 'path';
+import { type ReactBunodeConfig } from 'reactbunode/config';
+import tailwind from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+
+const Config: ReactBunodeConfig = {
+	style: {
+		postcss: {
+			plugins: [tailwind as any, autoprefixer]
+		}
+	}
+};
+
+export default Config;`;
+
+const reactBunodeConfigJS = `
+import { join } from 'path';
+import tailwind from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+
+const Config = {
+	style: {
+		postcss: {
+			plugins: [tailwind, autoprefixer]
+		}
+	}
+};
+
+export default Config;`;
+
 export const files = {
 	rootLayouFile,
 	rootLayouFileJS,
@@ -443,5 +474,7 @@ export const files = {
 	thankYouPagejs,
 	globalCss,
 	tailwindConfig,
-	tsconfig
+	tsconfig,
+	reactBunodeConfig,
+	reactBunodeConfigJS
 } as const;

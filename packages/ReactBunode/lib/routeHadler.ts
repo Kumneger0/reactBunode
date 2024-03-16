@@ -8,7 +8,7 @@ import { relative } from 'node:path';
 import { join, resolve as nodeResolve } from 'path';
 import type { ReactBunodeConfig } from '../config';
 import { clientResolver } from '../plugins/client-component-resolver';
-import { esbuildConfig } from './../utils/utils';
+import { esbuildConfig, getConfig, getFiles } from './../utils/utils';
 export const clientEntryPoints = new Set<string>();
 
 /**
@@ -17,21 +17,9 @@ export const clientEntryPoints = new Set<string>();
  * Parses the request URL and path to determine the page to render. Checks if pages and layouts exist on disk. Builds pages, layout, and client bundles with esbuild. Returns props and client component map for rendering.
  */
 
-const tsConfigFilePath = join(process.cwd(), 'tsconfig.json');
+const { style, ...esbuildUserConfig } = await getConfig();
 
-const isTypeScript = existsSync(tsConfigFilePath);
-
-const configFile = isTypeScript
-	? join(process.cwd(), 'reactbunode.config.ts')
-	: join(process.cwd(), 'reactbunode.config.js');
-
-const { style, ...esbuildUserConfig } = (
-	existsSync(configFile) ? (await import(configFile)).default : {}
-) as ReactBunodeConfig;
-
-export const filesWeAreLookingFor = isTypeScript
-	? (['layout.tsx', 'page.tsx'] as const)
-	: (['layout.jsx', 'page.jsx'] as const);
+const filesWeAreLookingFor = getFiles();
 
 export async function routeHandler(req: HonoRequest) {
 	const url = new URL(req.url);
@@ -77,7 +65,8 @@ export async function routeHandler(req: HonoRequest) {
 		outdir: join(process.cwd(), '.reactbunode', 'dev'),
 		plugins: [clientResolver, postCssPlugin(style?.postcss ? { postcss: style.postcss } : {})],
 		packages: 'external',
-		jsxFactory: 'jsx'
+		jsxFactory: 'jsx',
+		loader: { '.png': 'dataurl', '.jpg': 'dataurl', '.json': 'copy' }
 	});
 
 	const clientResult = await build({
@@ -86,7 +75,8 @@ export async function routeHandler(req: HonoRequest) {
 		entryPoints: [...clientEntryPoints],
 		plugins: [postCssPlugin(style?.postcss ? { postcss: style.postcss } : {})],
 		outdir: nodeResolve(process.cwd(), '.reactbunode', 'dev'),
-		write: false
+		write: false,
+		loader: { '.png': 'dataurl', '.jpg': 'dataurl', '.json': 'copy' }
 	});
 
 	const clientComponentMap = await appendClientBuildReactMetaData(clientResult!);

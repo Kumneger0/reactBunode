@@ -18,10 +18,9 @@ import { renderToReadableStream } from 'react-dom/server';
 
 import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js';
 import { injectRSCPayload } from 'rsc-html-stream/server';
-import { formatConfig } from '../utils/utils';
+import { formatConfig, getConfig, getFiles } from '../utils/utils';
 
 import type { Metadata, TJSDOM } from '../types/types';
-import { filesWeAreLookingFor } from './routeHadler';
 
 const dir = resolve(process.cwd());
 
@@ -29,7 +28,7 @@ function getAppPath(baseDir: string) {
 	return resolve(dir, baseDir);
 }
 
-const filesToGenerateSSG = filesWeAreLookingFor as unknown as string[];
+const filesToGenerateSSG = getFiles() as unknown as string[];
 
 const entryPoints = new Set<string>();
 export async function buildForProduction(baseDir = 'app') {
@@ -50,23 +49,23 @@ export async function buildForProduction(baseDir = 'app') {
 	return entryPoints;
 }
 
+const { style, ...esbuildUserConfig } = await getConfig();
+
 export async function bundle(entryPoints: Set<string>) {
 	await build({
+		...esbuildUserConfig,
 		entryPoints: [...entryPoints],
 		plugins: [
 			generateStaticHTMLPlugin(),
-			postCssPlugin({
-				postcss: {
-					plugins: [require('tailwindcss'), require('autoprefixer')]
-				}
-			})
+			postCssPlugin(style?.postcss ? { postcss: style.postcss } : {})
 		],
 		bundle: true,
 		outdir: join(process.cwd(), '.reactbunode', 'prd'),
 		packages: 'external',
 		format: 'esm',
 		allowOverwrite: true,
-		keepNames: true
+		keepNames: true,
+		loader: { '.png': 'file', '.jpg': 'file' }
 	});
 }
 

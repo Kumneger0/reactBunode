@@ -3,24 +3,8 @@
 import prog from 'caporal';
 import prompt, { type Schema } from 'prompt';
 import fs from 'fs-extra';
-import { $ } from 'bun';
+import { $, file } from 'bun';
 import { files } from './projectFiles';
-
-const reactBunodeConfig = `
-import { join } from 'path';
-import { type ReactBunodeConfig } from 'reactbunode/config';
-import tailwind from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
-
-const Config: ReactBunodeConfig = {
-	style: {
-		postcss: {
-			plugins: [tailwind as any, autoprefixer]
-		}
-	}
-};
-
-export default Config;`;
 
 const schema: Schema = {
 	properties: {
@@ -28,13 +12,16 @@ const schema: Schema = {
 		typeScript: {
 			description: 'do you wanna use typescript ? Y | N',
 			enum: ['Y', 'N', 'y', 'n']
+		},
+		installdependencies: {
+			description: 'do wanna intall dependencies ? Y | N',
+			enum: ['Y', 'N', 'y', 'n']
 		}
 	}
 };
 
 const packageJSON = {
 	name: 'e-comerse',
-	module: 'app/page.tsx',
 	type: 'module',
 	devDependencies: {
 		'@types/bun': 'latest'
@@ -59,7 +46,7 @@ const packageJSON = {
 const projectStructureWithTypeScript = {
 	'package.json': JSON.stringify(packageJSON, null, 2),
 	'tailwind.config.js': files['tailwindConfig'],
-	'reactbunode.config.ts': reactBunodeConfig,
+	'reactbunode.config.ts': files['reactBunodeConfig'],
 	'app/page.tsx': files['homePage'],
 	'app/layout.tsx': files['rootLayouFile'],
 	'app/[id]/page.tsx': files['idRoute'],
@@ -71,7 +58,7 @@ const projectStructureWithTypeScript = {
 const projectStructureWithoutTypeScript = {
 	'package.json': JSON.stringify(packageJSON, null, 2),
 	'tailwind.config.js': files['tailwindConfig'],
-	'reactbunode.config.js': reactBunodeConfig,
+	'reactbunode.config.js': files['reactBunodeConfigJS'],
 	'app/page.jsx': files['homePageJS'],
 	'app/layout.jsx': files['rootLayouFileJS'],
 	'app/[id]/page.jsx': files['idRouteJS'],
@@ -79,7 +66,7 @@ const projectStructureWithoutTypeScript = {
 	'app/global.css': files['globalCss']
 };
 
-prog.version('1.0.0').action((args, options, logger) => {
+prog.version('0.0.6').action((args, options, logger) => {
 	prompt.start();
 	prompt.get(schema, function (err, result) {
 		if (err) {
@@ -89,6 +76,7 @@ prog.version('1.0.0').action((args, options, logger) => {
 
 		const projectDir = result.folderName as string;
 		const isTypeScript = (result.typeScript as string).toLowerCase() == 'y';
+		const shoudlInstallDependencies = (result.installdependencies as string).toLowerCase() == 'y';
 
 		$`mkdir ${projectDir}`;
 
@@ -103,7 +91,7 @@ prog.version('1.0.0').action((args, options, logger) => {
 
 		const projectStructure = isTypeScript
 			? projectStructureWithTypeScript
-			: projectStructureWithoutTypeScript;
+			: projectStructureWithTypeScript;
 
 		const promises = Object.keys(projectStructure).map((file) => {
 			const content = projectStructure[file as keyof typeof projectStructure];
@@ -113,9 +101,17 @@ prog.version('1.0.0').action((args, options, logger) => {
 
 		Promise.all(promises)
 			.then(async () => {
-				console.log('intallinde depencies');
-				await $`cd ${projectDir}; bun run build; bun run start`;
-				console.log('installation done');
+				if (shoudlInstallDependencies) {
+					console.log('intalling dependencies');
+					await $`cd ${projectDir}; bun install`;
+					console.log('installation done');
+					console.log(`cd ${projectDir}`);
+					console.log(`bun run dev`);
+					return;
+				}
+				console.log(`cd ${projectDir} \n`);
+				console.log('bun install');
+				console.log('bun run dev');
 			})
 			.catch((err) => {
 				logger.error('Error creating files:', err);
