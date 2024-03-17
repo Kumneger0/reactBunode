@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'reactbunode/types';
 
 export type Products = {
 	id: number;
@@ -9,7 +10,7 @@ export type Products = {
 	image: string;
 };
 
-export const metadata = {
+export const metadata: Metadata = {
 	title: 'Demo E-commerse application',
 	description: 'This is a demo e-commerse application built with ReactBunny',
 	keywords: 'demo, e-commerse, application, reactbunny',
