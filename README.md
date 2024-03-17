@@ -6,8 +6,6 @@
 
 Please proceed with caution and consider the potential risks before integrating this package into your projects.
 
-# ReactBunode - Experimental Static Site Generator (SSG) Library
-
 experimental Static Site Generator (SSG) library designed to simplify the process of building static websites.
 
 ## Features
