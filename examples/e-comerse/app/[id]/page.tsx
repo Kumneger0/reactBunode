@@ -32,26 +32,32 @@ async function Page({ id }: { id: string }) {
 	if (!product) return <div>invalid id</div>;
 
 	return (
-		<div className="w-full h-full flex items-center justify-center flex-col">
-			<h1 className="text-center">{product.title}</h1>
-			<div className="flex justify-center flex-wrap gap-5">
-				<div>
+		<div className="flex flex-col items-center h-full justify-center">
+			<h1 className="text-center my-10 font-bold text-2xl">{product.title}</h1>
+			<div className="flex flex-col md:flex-row gap-5">
+				<div className="w-full md:w-1/2">
 					<img
 						src={product.image}
 						alt={product.title}
-						className="object-contain max-w-[400px] aspect-[3/4] w-full h-auto rounded-lg mb-2"
+						className="object-contain max-w-[400px] h-auto rounded-lg mb-2"
 					/>
 				</div>
-
-				<div className="flex flex-col gap-2 max-w-[300px]">
-					<div>{product.category}</div>
-					<div>{product.description}</div>
-					<div>{product.price}</div>
-					<a className="flex w-full justify-center" href={`/thankyou/${id}`}>
-						<button className="bg-green-600 p-3 border-none text-white rounded-lg">
-							purchease
-						</button>
-					</a>
+				<div className="w-full md:w-1/2">
+					<div className="flex flex-col gap-2">
+						<div className="text-center md:text-left font-bold text-lg">{product.category}</div>
+						<div className="text-center md:text-left">{product.description}</div>
+						<div className="text-center md:text-left font-bold text-lg">
+							${product.price}/
+							<span className="line-through">${Math.trunc(Number(product?.price) * 1.3)}</span>{' '}
+						</div>
+						<div className="flex justify-center">
+							<a href={`/thankyou/${id}`}>
+								<button className="bg-green-600 p-3 border-none text-white rounded-lg">
+									Purchase
+								</button>
+							</a>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
