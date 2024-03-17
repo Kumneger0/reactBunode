@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LandingPage = () => {
+const LandingPage = async () => {
 	return (
 		<>
 			<div className="py-6 flex flex-col justify-center overflow-y-hidden sm:py-12">

@@ -9,7 +9,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 			<head>
 				<title>React Bunode Documentaion</title>
 			</head>
-			<body className="mx-auto text-white bg-gray-800 font-mono m-0 p-0 overflow-x-hidden">
+			<body className="mx-auto text-slate-200 bg-gray-900 font-mono m-0 p-0 overflow-x-hidden">
 				<Header />
 				<div className="max-w-7xl mx-auto mt-28">{children}</div>
 			</body>

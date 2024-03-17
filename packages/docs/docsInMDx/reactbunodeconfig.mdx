@@ -1,0 +1,32 @@
+# reactbunode.config.ts
+
+The reactbunode.config.ts file in ReactBunode is a configuration file used to customize various aspects of the ReactBunode setup.
+
+Currently, the configuration options in this file are limited to defining aliases and configuring Tailwind CSS.
+
+## Usage
+
+Here's an overview of how you can use the reactbunode.config.ts file:
+
+**Define Aliases**: Use the alias property to define path aliases, which can simplify imports in your codebase by providing shorter and more convenient paths.
+
+## Example
+
+```
+import { join } from 'path';
+import { ReactBunodeConfig } from 'reactbunode/config';
+import tailwind from 'tailwindcss';
+
+const Config: ReactBunodeConfig = {
+  alias: {
+    '@comp': join(process.cwd(), 'components')
+  },
+
+  style: {
+		postcss: {
+			plugins: [tailwind as any, autoprefixer]
+		}
+	}
+};
+
+```

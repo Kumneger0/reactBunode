@@ -9,6 +9,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import React, { Suspense } from 'react';
 import type { Module } from '../types/types';
+import type { ReactBunodeConfig } from '../config';
 
 export function sendNotFoundHTML() {
 	const string = renderToString(<NotFoundPage />);
@@ -125,4 +126,27 @@ export function deleteDynamicImportCache(paths: Array<string>) {
 	for (const path of paths) {
 		delete require.cache[require.resolve(path)];
 	}
+}
+
+const tsConfigFilePath = join(process.cwd(), 'tsconfig.json');
+
+const isTypeScript = existsSync(tsConfigFilePath);
+
+export async function getConfig() {
+	const configFile = isTypeScript
+		? join(process.cwd(), 'reactbunode.config.ts')
+		: join(process.cwd(), 'reactbunode.config.js');
+
+	const config = (
+		existsSync(configFile) ? (await import(configFile)).default : {}
+	) as ReactBunodeConfig;
+	return config;
+}
+
+export function getFiles() {
+	const filesWeAreLookingFor = isTypeScript
+		? (['layout.tsx', 'page.tsx'] as const)
+		: (['layout.jsx', 'page.jsx'] as const);
+
+	return filesWeAreLookingFor;
 }

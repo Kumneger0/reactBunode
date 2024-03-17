@@ -1,0 +1,44 @@
+## generateMetadata Function
+
+The generateMetadata function in ReactBunode is designed to simplify the process of adding meta tags and manipulating the \<head> section of HTML documents. It allows you to dynamically generate metadata such as title, description, and Open Graph tags based on the properties of a product or any other entity.
+
+## Purpose
+
+The main purpose of generateMetadata is to generate metadata objects that can be used to enhance the SEO (Search Engine Optimization) and social sharing capabilities of your web pages.
+
+## Notes
+
+React will automatically inject a title meta script and any other tag you add anywhere in JSX into the \<head> portion of the HTML
+for more information see [react docs](https://react.dev/reference/react-dom/components)
+
+## Usage
+
+The function signature typically looks like this:
+
+```typescript
+export const generateMetadata = async ({ id }: { id: string }) => {
+	const product = await getProduct(id);
+
+	return {
+		title: product?.title,
+		description: product?.description,
+		openGraph: {
+			images: [{ url: product?.image }]
+		}
+	};
+};
+```
+
+# Metadata Object Export
+
+In addition to using the generateMetadata function, ReactBunode allows you to export metadata directly as an object.
+
+```
+export const metadata = {
+  title: 'Page Title',
+  description: 'Page Description',
+  openGraph: {
+    images: [{ url: 'image_url.jpg' }]
+  }
+};
+```

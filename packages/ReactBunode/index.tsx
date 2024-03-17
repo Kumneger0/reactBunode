@@ -64,7 +64,7 @@ if (command == 'dev') {
 		});
 
 		wp.watch({
-			directories: [join(process.cwd(), 'app')]
+			directories: [join(process.cwd())]
 		});
 
 		wp.on('change', (filePath, mtime) => {
