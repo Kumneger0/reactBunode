@@ -1,15 +1,23 @@
-# rscinbun
+# ReactBunode - Experimental Static Site Generator (SSG) Library
 
-To install dependencies:
+## Experimental Package Warning
 
-```bash
-bun install
-```
+**This package is highly experimental and not recommended for use in production environments.**
 
-To run:
+experimental Static Site Generator (SSG) library designed to simplify the process of building static websites.
 
-```bash
-bun run index.ts
-```
+## Features
 
-This project was created using `bun init` in bun v1.0.26. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+- **File-based Routing**:
+- **Static Generation**:
+- **React Server Components Support**
+
+## Getting Started
+
+To get started with, visit our [documentation site](https://reactbunode.pages.dev/docs/#get-started)
+
+## License
+
+ReactBunode is open-source and licensed under the MIT License.
+
+---

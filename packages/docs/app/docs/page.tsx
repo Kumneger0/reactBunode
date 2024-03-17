@@ -1,5 +1,6 @@
 import { A, Code, Heading, Heading2, Heading3, Li } from '@comp/markdownComponents';
 import { MessageSquareWarning } from 'lucide-react';
+import type { Metadata } from 'reactbunode/types';
 import { join } from 'path';
 import { type ComponentPropsWithoutRef } from 'react';
 
@@ -7,10 +8,8 @@ import Markdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { atomOneDark as theme } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-export const metadata = {
-	title: 'React Bunode docmentaion application',
-	description: 'This is a demo e-commerse application built with ReactBunode',
-	keywords: 'demo, e-commerse, application, ReactBunode',
+export const metadata: Metadata = {
+	title: 'ReactBunode Documentation',
 	openGraph: {
 		images: []
 	}

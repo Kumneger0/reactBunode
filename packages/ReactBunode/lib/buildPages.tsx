@@ -20,7 +20,9 @@ import * as rscDomWebpackClient from 'react-server-dom-webpack/client.browser.js
 import { injectRSCPayload } from 'rsc-html-stream/server';
 import { formatConfig, getConfig, getFiles } from '../utils/utils';
 
-import type { Metadata, TJSDOM } from '../types/types';
+import type { TJSDOM } from '../types/types';
+
+import type { Metadata } from '../types';
 
 const dir = resolve(process.cwd());
 
@@ -254,9 +256,9 @@ async function addMetaData(
 			title.textContent = metataInfo[key]!;
 			dom.window.document.head.appendChild(title);
 		}
-		if (typeof metataInfo[key] == 'string') {
-			dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metataInfo[key]}" />`;
-			dom.window.document.head.innerHTML += `<meta name="${key}" content="${metataInfo[key]}" />`;
+		if (typeof metataInfo[key as keyof typeof metadata] == 'string') {
+			dom.window.document.head.innerHTML += `<meta property="og:${key}" content="${metataInfo[key as keyof typeof metadata]}" />`;
+			dom.window.document.head.innerHTML += `<meta name="${key}" content="${metataInfo[key as keyof typeof metadata]}" />`;
 		}
 	});
 	Object.keys(metataInfo?.openGraph ?? {})?.map((key) => {

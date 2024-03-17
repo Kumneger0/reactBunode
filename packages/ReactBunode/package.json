@@ -8,6 +8,10 @@
 		"@types/serve-static": "1.15.5"
 	},
 	"exports": {
+		".": {
+			"default": "./dist/index.js"
+		},
+		"./types": "./dist/types.d.ts",
 		"./config": "./dist/config/index.js"
 	},
 	"scripts": {
@@ -51,6 +55,7 @@
 	"main": "dist/index.js",
 	"files": [
 		"dist/index.js",
+		"dist/types.d.ts",
 		"dist/root-client.js",
 		"dist/config/",
 		"README.md"
@@ -64,5 +69,5 @@
 	"bugs": {
 		"url": "https://github.com/Kumneger0/reactBunode/issues"
 	},
-	"homepage": "https://github.com/Kumneger0/reactBunode#readme"
+	"homepage": "https://reactbunode.pages.dev"
 }
