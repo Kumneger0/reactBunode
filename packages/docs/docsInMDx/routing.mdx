@@ -1,0 +1,32 @@
+ReactBunode employs a file-based routing system In this section, we'll explore how to create them
+
+## Creating a Route
+
+To create a route, follow these steps:
+
+1. **Create a folder:** Inside the app directory, create a new folder. The name of this folder will correspond to the URL path your route will represent (e.g., about for /about).
+2. **Add page.tsx:** Renders content for the /about route.
+
+## Dynamic Routes
+
+ReactBunode supports dynamic routes, allowing you to capture variable parts of the URL path. Here's how to create and access them:
+
+1. **Use square brackets:** Enclose a segment of the folder name within square brackets (for eg [id])
+2. **Access dynamic value:** In the page.tsx file, you can access the dynamic value using a prop for eg id if your folder name is [id]
+
+### Example
+
+```
+
+const MyDynamicPage = ({ id }) => {
+return (
+    <div>
+      <h1>This is a dynamic page!</h1>
+      <p>The slug is: {id}</p>
+    </div>
+  );
+};
+
+export default MyDynamicPage;
+
+```

@@ -1,3 +1,4 @@
+import { ExternalLink, Github } from 'lucide-react';
 import React from 'react';
 
 function Header() {
@@ -7,7 +8,14 @@ function Header() {
 				<div className="font-bold px-4 py-2 text-3xl">
 					<a href="/">ReactBunode</a>
 				</div>
-				<div>github icon</div>
+				<div>
+					<a href="https://github.com/Kumneger0/reactBunode" target="_blank">
+						<div className="flex items-center">
+							<ExternalLink className="mr-1" />
+							<Github />
+						</div>
+					</a>
+				</div>
 			</nav>
 		</header>
 	);

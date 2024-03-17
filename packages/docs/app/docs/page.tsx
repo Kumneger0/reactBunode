@@ -1,8 +1,11 @@
-import React, { type ComponentPropsWithoutRef } from 'react';
+import { A, Code, Heading, Heading2, Heading3, Li } from '@comp/markdownComponents';
+import { MessageSquareWarning } from 'lucide-react';
+import { join } from 'path';
+import { type ComponentPropsWithoutRef } from 'react';
 
 import Markdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { gruvboxDark as theme } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { atomOneDark as theme } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 export const metadata = {
 	title: 'React Bunode docmentaion application',
@@ -13,80 +16,15 @@ export const metadata = {
 	}
 };
 
-const projectFolderStucture = `
-# Folder Structure
-
-The project directory has the following structure:
-
-* **package.json:** Contains project metadata like dependencies, scripts, and configurations.
-* **tailwind.config.js (optional):** Defines Tailwind CSS configuration (if using Tailwind).
-* **reactbunode.config.ts:** Holds ReactBunode-specific configurations.
-* **tsconfig.json:** Contains TypeScript configuration settings.
-* **app/**: The core application directory:
-* **app/page.tsx:** The main entry point for the home page.
-* **app/layout.tsx:** The root layout component, similar to Next.js's layout approach.
-* **app/[id]/page.tsx:** Pages with dynamic routing based on IDs.
-* **app/thankyou/[id]/page.tsx:** Thank you pages with dynamic routing based on IDs.
-* **app/global.css:** Defines global CSS styles for the application.
-   (Optional sections for assets, API, components, etc.)
-
-`;
-
-const routing = `
-
-ReactBunode utilizes a convenient file-based routing system to manage navigation within your application. This section delves into creating both standard and dynamic routes.
-
-## Creating a Route
-
-To create a route, follow these steps:
-
-1. **Create a folder:** Inside the \`app\` directory, create a new folder. The name of this folder will correspond to the URL path your route will represent (e.g., \`about\` for \`/about\`).
-2. **Add \`page.tsx\`:** Renders content for the /about route.
-
-
-## Dynamic Routes
-
-ReactBunode supports dynamic routes, allowing you to capture variable parts of the URL path. Here's how to create and access them:
-
-1. **Use square brackets:**  Enclose a segment of the folder name within square brackets (for eg \`[id]\`)
-2. **Access dynamic value:** In the \`page.tsx\` file, you can access the dynamic value using a prop for eg id if your folder name is [id]
-### Example`;
-
-const dynamicRouteExample = `
-const MyDynamicPage = ({ id }) => {
-return (
-    <div>
-      <h1>This is a dynamic page!</h1>
-      <p>The slug is: {id}</p>
-    </div>
-  );
-};
-
-export default MyDynamicPage;
-`;
-
-function Heading({ children }: { children?: React.ReactNode }) {
-	return <h1 className="font-bold text-2xl py-2 my-2">{children}</h1>;
-}
-function Heading2({ children }: { children?: React.ReactNode }) {
-	return <h2 className="font-bold text-xl py-2 my-2">{children}</h2>;
-}
-
-function Li({ children }: { children?: React.ReactNode }) {
-	return <li className=" py-1">{children}</li>;
-}
-
-function Heading3({ children }: { children?: React.ReactNode }) {
-	return <h3 className="font-bold text-lg">{children}</h3>;
-}
-
 type MDXcomponents = NonNullable<ComponentPropsWithoutRef<typeof Markdown>['components']>;
 
 const components: MDXcomponents = {
 	h1: Heading,
 	h2: Heading2,
 	h3: Heading3,
-	li: Li
+	li: Li,
+	a: A,
+	code: Code as MDXcomponents['code']
 };
 
 async function Page() {
@@ -124,8 +62,11 @@ async function Page() {
 						</a>
 					</div>
 					<div className="font-bold text-lg">
-						<a className="text-white text-decoration-none hover:text-blue-500" href="#Metadata">
-							Metadata
+						<a
+							className="text-white text-decoration-none hover:text-blue-500"
+							href="#reactbunode.config"
+						>
+							reactbunode.config.ts
 						</a>
 					</div>
 				</div>
@@ -133,17 +74,16 @@ async function Page() {
 					<div id="get-started" className="p-4 my-3 leading-5">
 						<h1 className="font-bold  text-xl">Get Started</h1>
 						<div className="leading-7">
-							Welcome to the exciting world of static site generation (SSG) with our innovative
-							library! This library empowers React developers to craft blazing-fast static HTML
-							websites, offering a unique approach to building web experiences. It's currently under
-							active development, and we'd love your feedback as you experiment with its
-							capabilities.
+							ReactBunode is an experimental, lightweight static site generator library
 							<div className="bg-orange-700 p-5 my-3 rounded-lg">
-								<h1 className="text-lg font-semibold"> 😜 Important Note</h1>i am excited to share
-								this project with you, but it's important to note that it's currently undergoing
-								active development. While it might be functional for basic exploration and
-								experimentation, it's not yet intended for use in real-world production
-								applications.
+								<h1 className="text-lg font-semibold flex items-center gap-2">
+									{' '}
+									<MessageSquareWarning className="text-yellow-400" /> <div>Important Note</div>
+								</h1>
+								i am excited to share this project with you, but it's important to note that it's
+								currently undergoing active development. While it might be functional for basic
+								exploration and experimentation, it's not yet intended for use in real-world
+								production applications.
 							</div>
 						</div>
 					</div>
@@ -152,20 +92,26 @@ async function Page() {
 						<Installation />
 					</div>
 					<div id="folder-structure" className="p-4 my-3">
+						{/*@ts-expect-error Type 'Promise<Element>' is not assignable to type 'ReactNode'.*/}
 						<FolderStructure />
 					</div>
 
 					<div id="Routes" className="p-4 my-3">
 						<h1 className="font-bold text-2xl py-2  my-2">Routes</h1>
+						{/*@ts-expect-error Type 'Promise<Element>' is not assignable to type 'ReactNode'.*/}
+
 						<Routing />
 					</div>
 					<div id="functions" className="p-4 my-3">
-						<h1 className="font-bold text-xl">functions</h1>
-						<div></div>
+						<h1 className="font-bold text-2xl">functions</h1>
+						{/*@ts-expect-error Type 'Promise<Element>' is not assignable to type 'ReactNode'.*/}
+
+						<Functions />
 					</div>
-					<div id="Metadata" className="p-4 my-3">
-						<h1 className="font-bold text-xl">Metadata</h1>
-						<div></div>
+					<div id="#reactbunode.config" className="p-4 my-3">
+						{/*@ts-expect-error Type 'Promise<Element>' is not assignable to type 'ReactNode'.*/}
+
+						<ReactBunodeConfig />
 					</div>
 				</div>
 			</div>
@@ -176,7 +122,7 @@ async function Page() {
 export default Page;
 
 function Installation() {
-	const installationCommand = `    bunx createReactBunode
+	const installationCommand = `bunx createReactBunode
 `;
 	return (
 		<div className="">
@@ -202,17 +148,18 @@ function Installation() {
 	);
 }
 
-function FolderStructure() {
+async function FolderStructure() {
+	const projectFolderStucture = await Bun.file(
+		join(process.cwd(), 'docsInMDx', 'folderStructure.mdx')
+	).text();
 	return <RenderMarkdonw>{projectFolderStucture}</RenderMarkdonw>;
 }
 
-function Routing() {
+async function Routing() {
+	const routing = await Bun.file(join(process.cwd(), 'docsInMDx', 'routing.mdx')).text();
 	return (
 		<div>
 			<RenderMarkdonw>{routing}</RenderMarkdonw>
-			<SyntaxHighlighter style={theme} language="javascript">
-				{dynamicRouteExample}
-			</SyntaxHighlighter>
 		</div>
 	);
 }
@@ -222,5 +169,35 @@ function RenderMarkdonw({ children }: { children: string }) {
 		<Markdown components={components} className={''}>
 			{children}
 		</Markdown>
+	);
+}
+
+async function Functions() {
+	const generateMetadata = await Bun.file(
+		join(process.cwd(), 'docsInMDx', 'generateMetadata.mdx')
+	).text();
+	const getStaticPaths = await Bun.file(
+		join(process.cwd(), 'docsInMDx', 'getStaticPaths.mdx')
+	).text();
+	return (
+		<div>
+			<div>
+				<RenderMarkdonw>{getStaticPaths}</RenderMarkdonw>
+			</div>
+			<div>
+				<RenderMarkdonw>{generateMetadata}</RenderMarkdonw>
+			</div>
+		</div>
+	);
+}
+
+async function ReactBunodeConfig() {
+	const reactBunodeConfig = await Bun.file(
+		join(process.cwd(), 'docsInMDx', 'reactbunodeconfig.mdx')
+	).text();
+	return (
+		<div>
+			<RenderMarkdonw>{reactBunodeConfig}</RenderMarkdonw>
+		</div>
 	);
 }

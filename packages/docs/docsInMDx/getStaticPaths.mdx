@@ -1,0 +1,32 @@
+## getStaticPaths Function
+
+The getStaticPaths function in ReactBunode serves a similar purpose to generateStaticParams in Next.js, allowing you to pre-render pages statically at build time in combination with dynamic routes. It facilitates the generation of paths dynamically based on data fetched from an external source.
+
+at build time. This function is particularly useful when you have dynamic routes whose paths depend on data that is not known until runtime.
+
+## Purpose
+
+The main purpose of getStaticPaths is to generate a list of paths for which pages will be statically generated at build time. These paths typically correspond to the dynamic parameters that your dynamic routes expect.
+
+## Note
+
+ReactBunode serves as a static site generator library. For dynamic routes, getStaticPaths must be exported from the route component. If getStaticPaths is not provided for a dynamic route, ReactBunode won't be able to generate the corresponding static route.
+
+## Usage
+
+```
+export const getStaticPaths = async () => {
+	const products = (await fetch('https://fakestoreapi.com/products')
+	.then((res) => res.json())) as
+		| Array<Products>
+		| undefined;
+	return products?.map(({ id }) => ({ id }));
+};
+
+
+
+
+async function Page({ id }: { id: string }) {
+	//rest code
+}
+```
