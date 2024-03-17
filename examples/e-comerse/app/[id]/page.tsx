@@ -1,4 +1,5 @@
 import { type Products } from '../page';
+import type { Metadata } from 'reactbunode/types';
 
 export const getProduct = async (id: string) => {
 	return (await fetch(`https://fakestoreapi.com/products/${id}`).then((res) => res.json())) as
@@ -13,14 +14,14 @@ export const getStaticPaths = async () => {
 	return products?.map(({ id }) => ({ id }));
 };
 
-export const generateMetadata = async ({ id }: { id: string }) => {
+export const generateMetadata = async ({ id }: { id: string }): Promise<Metadata> => {
 	const product = await getProduct(id);
 
 	return {
 		title: product?.title,
 		description: product?.description,
 		openGraph: {
-			images: [{ url: product?.image }]
+			images: [{ url: product?.image ?? '' }]
 		}
 	};
 };
