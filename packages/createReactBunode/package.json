@@ -2,7 +2,7 @@
 	"name": "createreactbunode",
 	"module": "dist/index.js",
 	"description": "project scaffoder for reactbunode",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"type": "module",
 	"scripts": {
 		"build": "bunx esbuild src/index.ts --bundle --outdir=dist  --packages=external"
