@@ -16,7 +16,6 @@ jobs:
       with:
         bun-version: latest
         registry-url: 'https://registry.npmjs.org'
-      working-directory: packages/createReactBunode
 
     - name: Install Dependencies
       run: bun install
