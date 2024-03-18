@@ -16,7 +16,6 @@ jobs:
       with:
         bun-version: latest
         registry-url: 'https://registry.npmjs.org'
-      working-directory: packages/createReactBunode
 
     - name: Install Dependencies
       run: bun install
@@ -30,5 +29,5 @@ jobs:
       run: npm publish
       working-directory: packages/createReactBunode
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_SECRET }}
+        BUN_AUTH_TOKEN: ${{ secrets.NPM_SECRET }}
 
