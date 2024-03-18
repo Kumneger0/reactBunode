@@ -32,7 +32,7 @@ const packageJSON = {
 		start: 'reactBunode start'
 	},
 	dependencies: {
-		reactbunode: '0.0.11',
+		reactbunode: '0.0.12',
 		react: '18.3.0-next-3706edb81-20230308',
 		'react-dom': '18.3.0-next-3706edb81-20230308',
 		autoprefixer: '10.4.18',
