@@ -1,4 +1,4 @@
-name: Publish mylib to npm
+name: Publish ReactBunode to npm
 
 on:
   push:
@@ -25,15 +25,15 @@ jobs:
 
     - name: Install Dependencies
       run: bun install
-      working-directory: packages/createReactBunode
+      working-directory: packages/ReactBunode
 
     - name: build
       run: bun run build
-      working-directory: packages/createReactBunode
+      working-directory: packages/ReactBunode
 
     - name: Publish to npm
       run: npm publish
-      working-directory: packages/createReactBunode
+      working-directory: packages/ReactBunode
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_SECRET }}
         BUN_AUTH_TOKEN: ${{ secrets.NPM_SECRET }}

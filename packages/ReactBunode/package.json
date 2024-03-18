@@ -15,7 +15,8 @@
 		"./config": "./dist/config/index.js"
 	},
 	"scripts": {
-		"build": "bun --bun scripts/esbuild.ts",
+		"buildAndWatch": "bun --bun scripts/esbuildWatch.ts",
+		"build": "tsc && bun --bun scripts/esbuild.ts",
 		"ts-build": "tsc --watch",
 		"pub": "npm publish"
 	},
@@ -50,7 +51,7 @@
 		"watchpack": "2.4.0",
 		"ws": "8.16.0"
 	},
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"description": "simple static site generator using react",
 	"main": "dist/index.js",
 	"files": [
