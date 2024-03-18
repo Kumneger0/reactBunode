@@ -1,0 +1,40 @@
+name: Publish createReactBunode to npm
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        registry-url: 'https://registry.npmjs.org/'
+        node-version: '18'
+
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install Dependencies
+      run: bun install
+      working-directory: packages/createReactBunode
+
+    - name: build
+      run: bun run build
+      working-directory: packages/createReactBunode
+
+    - name: Publish to npm
+      run: npm publish
+      working-directory: packages/createReactBunode
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_SECRET }}
+        BUN_AUTH_TOKEN: ${{ secrets.NPM_SECRET }}
+
