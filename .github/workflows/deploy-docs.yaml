@@ -13,6 +13,7 @@ jobs:
     - name: Set up Bun
       uses: oven-sh/setup-bun@v1
       with:
+        registry-url: 'https://registry.npmjs.org/'
         bun-version: latest
 
     - name: link reactbunode
@@ -20,7 +21,7 @@ jobs:
       working-directory: packages/ReactBunode
 
     - name: Build
-      run: bun install --frozen-lockfile && bun link reactbunode && bunx reactBunode build
+      run: bun install --frozen-lockfile && bun link reactbunode && bunx reactbunode build
       working-directory: packages/docs
 
     - name: Publish
