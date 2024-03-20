@@ -15,7 +15,7 @@ jobs:
       with:
         bun-version: latest
     - name: Build
-      run: bun install && bunx reactbunode build
+      run: bun install --frozen-lockfile && bunx reactbunode build
       working-directory: packages/docs
     - name: Publish
       uses: cloudflare/pages-action@1
