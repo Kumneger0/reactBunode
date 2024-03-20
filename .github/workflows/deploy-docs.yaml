@@ -14,8 +14,13 @@ jobs:
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: latest
+
+    - name: link reactbunode
+      run: bun link
+      working-directory: packages/ReactBunode
+
     - name: Build
-      run: bun install && bunx reactBunode build
+      run: bun link reactbunode && bun install && bun run build
       working-directory: packages/docs
     - name: Publish
       uses: cloudflare/pages-action@1
