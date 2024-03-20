@@ -20,7 +20,9 @@ jobs:
       working-directory: packages/ReactBunode
 
     - name: Build
-      run:  bun install && bun link reactbunode && bun run build
+      
+      run: bun install --frozen-lockfile && bun link reactbunode && bun run build
+
       working-directory: packages/docs
     - name: Publish
       uses: cloudflare/pages-action@1
