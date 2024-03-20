@@ -5,7 +5,8 @@
 	"version": "0.0.9",
 	"type": "module",
 	"scripts": {
-		"build": "bunx esbuild src/index.ts --bundle --outdir=dist  --packages=external"
+		"build": "bunx esbuild src/index.ts --bundle --outdir=dist  --packages=external --format=esm",
+		"pub": "npm publish"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

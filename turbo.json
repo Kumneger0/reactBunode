@@ -16,6 +16,10 @@
 		"start": {
 			"cache": false,
 			"persistent": true
+		},
+		"buildAndWatch": {
+			"cache": false,
+			"persistent": true
 		}
 	}
 }

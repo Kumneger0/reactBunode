@@ -26,6 +26,38 @@ const components: MDXcomponents = {
 	code: Code as MDXcomponents['code']
 };
 
+const CustomList = () => {
+	return (
+		<ul className="p-0 m-0 relative">
+			<li className="list-none border-l-2 border-white ml-4">
+				<div className="pl-4 relative">Level 1</div>
+			</li>
+			<li className="list-none border-l-2 border-white ml-4">
+				<div className="pl-4 relative">Level 1</div>
+				<ul className="ml-4">
+					<li className="list-none border-l-2 border-white ml-4">
+						<div className="pl-4 relative">Level 2</div>
+					</li>
+					<li className="list-none border-l-2 border-white ml-4">
+						<div className="pl-4 relative">Level 2</div>
+						<ul className="ml-4">
+							<li className="list-none border-l-2 border-white ml-4">
+								<div className="pl-4 relative">Level 3</div>
+							</li>
+							<li className="list-none border-l-2 border-white ml-4">
+								<div className="pl-4 relative">Level 3</div>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+			<li className="list-none border-l-2 border-white ml-4">
+				<div className="pl-4 relative">Level 1</div>
+			</li>
+		</ul>
+	);
+};
+
 async function Page() {
 	return (
 		<>
@@ -151,6 +183,7 @@ async function FolderStructure() {
 	const projectFolderStucture = await Bun.file(
 		join(process.cwd(), 'docsInMDx', 'folderStructure.mdx')
 	).text();
+	console.log();
 	return <RenderMarkdonw>{projectFolderStucture}</RenderMarkdonw>;
 }
 

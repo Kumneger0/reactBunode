@@ -6,8 +6,13 @@
 		"dev": "turbo --no-cache run dev",
 		"build": "turbo --no-cache run build ",
 		"start": "turbo --no-cache run start ",
-		"publish": "turbo run publish --filter=reactbunode",
-		"buildLib": "turbo run build --filter=reactbunode"
+		"publish": "turbo run pub",
+		"publish:createReactBunode": "turbo run bub --filter=createReactBunode",
+		"publish:reactbunode": "turbo run pub --filter=reactbunode",
+		"build:reactbunode": "turbo run build --filter=reactbunode",
+		"buildAndWatch:reactbunode": "turbo run buildAndWatch --filter=reactbunode",
+		"dev:docs": "turbo run dev --filter=docs",
+		"build:docs":"turbo run build --filter=docs"
 	},
 	"type": "module",
 	"workspaces": [
