@@ -1,15 +1,19 @@
 # Folder Structure
 
-The project directory has the following structure:
+```md
+project
+    app/
+       global.css
+       page.tsx
+       layout.tsx
+       [id]
+          page.tsx
+       thankyou
+          [id]
+              page.tsx
+    package.json
+    tailwind.config.js
+    reactbunode.config.ts
+    tsconfig.json
+```
 
-- **package.json:** Contains project metadata like dependencies, scripts, and configurations.
-- **tailwind.config.js (optional):** Defines Tailwind CSS configuration (if using Tailwind).
-- **reactbunode.config.ts:** Holds ReactBunode-specific configurations.
-- **tsconfig.json:** Contains TypeScript configuration settings.
-- **app/**: The core application directory:
-- **app/page.tsx:** The main entry point for the home page.
-- **app/layout.tsx:** The root layout component, similar to Next.js's layout approach.
-- **app/[id]/page.tsx:** Pages with dynamic routing based on IDs.
-- **app/thankyou/[id]/page.tsx:** Thank you pages with dynamic routing based on IDs.
-- **app/global.css:** Defines global CSS styles for the application.
-  (Optional sections for assets, API, components, etc.)

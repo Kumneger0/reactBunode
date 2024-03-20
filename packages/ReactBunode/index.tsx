@@ -47,12 +47,6 @@ try {
 	console.error(err);
 }
 
-/**
- * Handles API endpoint routing.
- * Checks if endpoint file exists and handles routing to the appropriate handler function for the request method.
- * Returns 404 if endpoint not found.
- */
-
 if (command == 'dev') {
 	const wss = new WebSocketServer({ port: 8080 });
 
@@ -60,7 +54,8 @@ if (command == 'dev') {
 		const wp = new Watchpack({
 			aggregateTimeout: 500,
 			poll: true,
-			followSymlinks: true
+			followSymlinks: true,
+			ignored: ['.*']
 		});
 
 		wp.watch({
@@ -79,6 +74,12 @@ if (command == 'dev') {
 }
 
 function devMode() {
+	/**
+	 * Handles API endpoint routing.
+	 * Checks if endpoint file exists and handles routing to the appropriate handler function for the request method.
+	 * Returns 404 if endpoint not found.
+	 */
+
 	app.use('/api/*', async (c, next) => {
 		const pathname = new URL(c.req.url).pathname;
 		const reqMethod = c.req.method;
