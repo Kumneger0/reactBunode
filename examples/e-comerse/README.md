@@ -1,15 +1,2 @@
-# .
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run app/page.tsx
-```
-
-This project was created using `bun init` in bun v1.0.26. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+This is a demonstration site utilizing reactBunode. Please visit the deployed version [here](https://reactbunode-e-commerse-demo.netlify.app/)
