@@ -51,7 +51,7 @@
 		"watchpack": "2.4.0",
 		"ws": "8.16.0"
 	},
-	"version": "0.0.15",
+	"version": "0.0.16",
 	"description": "simple static site generator using react",
 	"main": "dist/index.js",
 	"files": [

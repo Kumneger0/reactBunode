@@ -1,4 +1,13 @@
-on: [push]
+name: deploy docs
+
+
+on:
+  push:
+    workflows: ["Publish ReactBunode"]
+    types:
+    - completed
+    branches:
+    - main
 jobs:
   deploy:
     runs-on: ubuntu-latest

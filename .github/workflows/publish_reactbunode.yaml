@@ -1,4 +1,4 @@
-name: Publish ReactBunode to npm
+name: Publish ReactBunode
 
 on:
   push:
