@@ -21,7 +21,7 @@ jobs:
       working-directory: packages/ReactBunode
 
     - name: Build
-      run: bun install --frozen-lockfile && bun link reactbunode && bunx reactbunode build
+      run: bun install && bun link reactbunode && bunx reactbunode build
       working-directory: packages/docs
 
     - name: Publish
