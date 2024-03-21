@@ -1,4 +1,4 @@
-name: Publish ReactBunode to npm
+name: Test
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       run: bun install
       working-directory: packages/ReactBunode
 
-    - name: build
+    - name: test
       run: bun run test
       working-directory: packages/ReactBunode
 
