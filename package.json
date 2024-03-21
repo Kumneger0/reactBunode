@@ -13,7 +13,8 @@
 		"buildAndWatch:reactbunode": "turbo run buildAndWatch --filter=reactbunode",
 		"dev:docs": "turbo run dev --filter=docs",
 		"build:docs": "turbo run build --filter=docs",
-		"test": "turbo run test"
+		"test": "turbo run test",
+		"start:docs": "turbo --no-cache run start --filter=docs"
 	},
 	"type": "module",
 	"workspaces": [

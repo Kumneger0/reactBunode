@@ -230,6 +230,12 @@ async function addMetaData(
 
 	const dom = new JSDOM(html) as TJSDOM;
 
+	const meta = dom.window.document.createElement('meta');
+	meta.name = 'viewport';
+	meta.content = 'width=device-width, initial-scale=1.0';
+
+	dom.window.document.head.appendChild(meta);
+
 	if (existsSync(join(path, 'page.css'))) {
 		const link = dom.window.document.createElement('link');
 		link.rel = 'stylesheet';
