@@ -3,7 +3,6 @@ import { MessageSquareWarning } from 'lucide-react';
 import type { Metadata } from 'reactbunode/types';
 import { join } from 'path';
 import { type ComponentPropsWithoutRef } from 'react';
-
 import Markdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { atomOneDark as theme } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -26,43 +25,11 @@ const components: MDXcomponents = {
 	code: Code as MDXcomponents['code']
 };
 
-const CustomList = () => {
-	return (
-		<ul className="p-0 m-0 relative">
-			<li className="list-none border-l-2 border-white ml-4">
-				<div className="pl-4 relative">Level 1</div>
-			</li>
-			<li className="list-none border-l-2 border-white ml-4">
-				<div className="pl-4 relative">Level 1</div>
-				<ul className="ml-4">
-					<li className="list-none border-l-2 border-white ml-4">
-						<div className="pl-4 relative">Level 2</div>
-					</li>
-					<li className="list-none border-l-2 border-white ml-4">
-						<div className="pl-4 relative">Level 2</div>
-						<ul className="ml-4">
-							<li className="list-none border-l-2 border-white ml-4">
-								<div className="pl-4 relative">Level 3</div>
-							</li>
-							<li className="list-none border-l-2 border-white ml-4">
-								<div className="pl-4 relative">Level 3</div>
-							</li>
-						</ul>
-					</li>
-				</ul>
-			</li>
-			<li className="list-none border-l-2 border-white ml-4">
-				<div className="pl-4 relative">Level 1</div>
-			</li>
-		</ul>
-	);
-};
-
 async function Page() {
 	return (
 		<>
 			<div className="flex relative flex-wrap justify-center gap-5">
-				<div className="w-[20%]  gap-2 top-[80px] max-h-[600px] sticky  p-6 rounded-lg shadow-lg">
+				<div className="md:w-[20%] w-full  gap-2 top-[80px] max-h-[600px] md:sticky  p-6">
 					<div className="font-bold text-lg">
 						<a className="text-white text-decoration-none hover:text-blue-500" href="#get-started">
 							Get Started
@@ -101,7 +68,7 @@ async function Page() {
 						</a>
 					</div>
 				</div>
-				<div className="w-[65%]">
+				<div className="w-full md:w-[65%] ">
 					<div id="get-started" className="p-4 my-3 leading-5">
 						<h1 className="font-bold  text-xl">Get Started</h1>
 						<div className="leading-7">
@@ -195,9 +162,6 @@ async function Routing() {
 		</div>
 	);
 }
-
-
-
 
 function RenderMarkdonw({ children }: { children: string }) {
 	return (

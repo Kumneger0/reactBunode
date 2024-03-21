@@ -7,7 +7,6 @@ import serveStatic from 'serve-static';
 
 import { existsSync } from 'fs';
 import http from 'http';
-import importFresh from 'import-fresh';
 import { join } from 'path';
 import { renderToReadableStream } from 'react-dom/server';
 //@ts-expect-error "Could not find a declaration file for module 'react-server-dom-webpack/server.edge.js"
@@ -87,7 +86,7 @@ function devMode() {
 
 		if (!existsSync(endpointFilePath)) return sendNotFoundHTML();
 
-		const module = (await importFresh(endpointFilePath)) as {
+		const module = (await import(endpointFilePath)) as {
 			[k: string]: (req: Request) => Response;
 		};
 
@@ -155,12 +154,17 @@ function devMode() {
                       return import(id);
 				   }
 				   if (document.readyState == 'loading') {
-                      	document.addEventListener('DOMContentLoaded', addStylesheet);
+                      	document.addEventListener('DOMContentLoaded', addStylesheetAndResponsiveMeta);
                       } else {
                       	addStylesheet();
                       }
-                
-                      function addStylesheet() {
+                      function addStylesheetAndResponsiveMeta() {
+                        const meta = document.createElement('meta')
+                        meta.name = "viewport"
+                        meta.content = "width=device-width, initial-scale=1.0"
+  
+                        document.head.appendChild(meta);
+
                       	const linkPageCss = document.createElement('link');
                       	linkPageCss.rel = 'stylesheet';
                       	linkPageCss.href = '/static/page.css';
@@ -172,6 +176,7 @@ function devMode() {
                         document.head.appendChild(linkLayoutCss);
                       	document.head.appendChild(linkPageCss);
                       };
+					  
 				   ${clientBootstrapScript}
 				   `
 			});
