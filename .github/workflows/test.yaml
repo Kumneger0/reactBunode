@@ -1,0 +1,30 @@
+name: Publish ReactBunode to npm
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install Dependencies
+      run: bun install
+      working-directory: packages/ReactBunode
+
+    - name: build
+      run: bun run test
+      working-directory: packages/ReactBunode
+
+
+
+

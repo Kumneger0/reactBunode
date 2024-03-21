@@ -2,7 +2,6 @@ import { beforeEach, expect, it, jest, describe } from 'bun:test';
 import fs from 'fs-extra';
 import prompt from 'prompt';
 import { createNewApplication } from '.';
-import { tsconfig } from './projectFiles';
 
 
 describe('creates new project', () => {
