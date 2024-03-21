@@ -3,8 +3,10 @@
 import prog from 'caporal';
 import prompt, { type Schema } from 'prompt';
 import fs from 'fs-extra';
-import { $, file } from 'bun';
+import { $ } from 'bun';
 import { files } from './projectFiles';
+
+
 
 createNewApplication();
 export async function createNewApplication() {
@@ -61,7 +63,6 @@ export async function createNewApplication() {
 		'app/[id]/page.tsx': files['idRoute'],
 		'app/thankyou/[id]/page.tsx': files['thankYouPage'],
 		'app/global.css': files['globalCss'],
-
 		'tsconfig.json': files['tsconfig']
 	};
 
@@ -101,7 +102,7 @@ export async function createNewApplication() {
 
 			const projectStructure = isTypeScript
 				? projectStructureWithTypeScript
-				: projectStructureWithTypeScript;
+				: projectStructureWithoutTypeScript;
 
 			const promises = Object.keys(projectStructure).map((file) => {
 				const content = projectStructure[file as keyof typeof projectStructure];

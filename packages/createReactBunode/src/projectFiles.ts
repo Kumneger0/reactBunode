@@ -391,7 +391,7 @@ const tailwindConfig = `
 
 `;
 
-const tsconfig = `
+export const tsconfig = `
 {
     "compilerOptions": {
         "lib": [
